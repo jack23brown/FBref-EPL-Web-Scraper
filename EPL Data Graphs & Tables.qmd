@@ -1,0 +1,247 @@
+---
+title: "EPL Data Graphs & Tables"
+author: "Jack Kenyon Brown"
+format: html
+editor: visual
+---
+
+# EPL Data Graphs & Tables
+
+As a part of "The Impact of Video Assistant Referee (VAR) on the English Premier League" by Jack Kenyon Brown, et. al.
+
+## Tables by Season
+
+```{r}
+#| lable: Table of Average Total Match Statistics, by Season
+
+# Average Match Statistics table with values rounded to three decimal points
+mean_table <- EPL_Totals %>%
+  group_by(Season) %>%
+  summarise(
+    mean_totalgoals = round(mean(na.omit(totalgoals)), 3),
+    mean_xG = round(mean(na.omit(TotalxG)), 3),
+    mean_shots = round(mean(na.omit(totalshots)), 3),
+    mean_sot = round(mean(na.omit(totalsot)), 3),
+    mean_totalassists = round(mean(na.omit(totalassists)), 3),
+    mean_totalred = round(mean(na.omit(totalred)), 3),
+    mean_totalyellow = round(mean(na.omit(totalyellow)), 3),
+    mean_pksatt = round(mean(na.omit(totalpksatt)), 3),
+    mean_pksmade = round(mean(na.omit(totalpksmade)), 3),
+    mean_pksconvrate = round(mean(na.omit(totalpkconvrate)), 3),
+    mean_og = round(mean(na.omit(totalowngoal)), 3),
+    mean_totalcross = round(mean(na.omit(totalcross)), 3),
+    mean_off = round(mean(na.omit(totaloff)), 3),
+    mean_tackles = round(mean(na.omit(totaltackleswon)), 3),
+    mean_fouls = round(mean(na.omit(totalfoulscom)), 3),
+    mean_int = round(mean(na.omit(totalint)), 3),
+    mean_saves = round(mean(na.omit(totalsaves)), 3)
+  )
+
+# Printing the table with centered columns and black text
+mean_table %>%
+  gt() %>%
+  cols_label(
+    mean_totalgoals = "Goals",
+    mean_xG = "xG",
+    mean_shots = "Shots",
+    mean_sot = "Shots on Target",
+    mean_totalassists = "Assists",
+    mean_totalred = "Red Cards",
+    mean_totalyellow = "Yellow Cards",
+    mean_pksatt = "PKs Awarded",
+    mean_pksmade = "PKs Made",
+    mean_pksconvrate = "PK Conv. Rate",
+    mean_og = "Own Goals",
+    mean_totalcross = "Crosses",
+    mean_off = "Offsides",
+    mean_tackles = "Tackles",
+    mean_fouls = "Fouls",
+    mean_int = "Interceptions",
+    mean_saves = "Saves"
+  ) %>%
+  tab_header(
+    title = "Average Match Statistics"
+  ) %>%
+  cols_align(
+    align = "center",
+    columns = everything()
+  ) %>%
+  tab_style(
+    style = cell_text(color = "black"),
+    locations = cells_body(columns = everything())
+  ) %>%
+  tab_style(
+    style = cell_text(color = "black"),
+    locations = cells_column_labels(columns = everything())
+  ) %>%
+  tab_style(
+    style = cell_text(color = "black"),
+    locations = cells_title()
+  )
+```
+
+```{r}
+#| lable: Table of Total Statistics, by Season
+
+#Total Match Statistics table
+sum_table <- EPL_Totals %>%
+  group_by(Season) %>%
+  summarise(
+    sum_totalgoals = sum(na.omit(totalgoals)),
+    sum_xG = sum(na.omit(TotalxG)),
+    sum_shots = sum(na.omit(totalshots)),
+    sum_sot = sum(na.omit(totalsot)),
+    sum_totalassists = sum(na.omit(totalassists)),
+    sum_totalred = sum(na.omit(totalred)),
+    sum_totalyellow = sum(na.omit(totalyellow)),
+    sum_pksatt = sum(na.omit(totalpksatt)),
+    sum_pksmade = sum(na.omit(totalpksmade)),
+    sum_pkgoalprop = round(sum(na.omit(totalpksmade)) / sum(na.omit(totalgoals)), 5),
+    sum_og = sum(na.omit(totalowngoal)),
+    sum_totalcross = sum(na.omit(totalcross)),
+    sum_off = sum(na.omit(totaloff)),
+    sum_tackles = sum(na.omit(totaltackleswon)),
+    sum_fouls = sum(na.omit(totalfoulscom)),
+    sum_int = sum(na.omit(totalint)),
+    sum_saves = sum(na.omit(totalsaves))
+  )
+
+sum_table <- sum_table %>%
+  gt() %>%
+  cols_label(
+    sum_totalgoals = "Goals",
+    sum_xG = "xG",
+    sum_shots = "Shots",
+    sum_sot = "Shots on Target",
+    sum_totalassists = "Assists",
+    sum_totalred = "Red Cards",
+    sum_totalyellow = "Yellow Cards",
+    sum_pksatt = "PKs Att.",
+    sum_pksmade = "PKs Made",
+    sum_pkgoalprop = "Proportion of PK Goals",
+    sum_og = "Own Goals",
+    sum_totalcross = "Crosses",
+    sum_off = "Offsides",
+    sum_tackles = "Tackles",
+    sum_fouls = "Fouls",
+    sum_int = "Interceptions",
+    sum_saves = "Saves"
+  ) %>%
+  tab_header(
+    title = "Total Season Statistics"
+  ) %>%
+  cols_align(
+    align = "center",
+    columns = everything()
+  ) %>%
+  tab_style(
+    style = cell_text(color = "black"),
+    locations = cells_body(columns = everything())
+  ) %>%
+  tab_style(
+    style = cell_text(color = "black"),
+    locations = cells_column_labels(columns = everything())
+  ) %>%
+  tab_style(
+    style = cell_text(color = "black"),
+    locations = cells_title()
+  )
+```
+
+## 
+
+## Barcharts by Season
+
+```{r}
+#| lable: Barcharts of Average Total Match Statistics by matchweek,  Season
+
+#Manually replace 'totalgoals' with a variable of your choice
+#Further, be sure to respectively update the main title of the graph
+
+EPL_5 %>%
+  group_by(PostVAR, Season) %>%
+  summarise(avg_totalgoals = mean(na.omit(totalgoals))) %>%
+  ggplot(aes(x = Season, y = avg_totalgoals, fill = factor(PostVAR))) +
+  geom_col(position = position_dodge()) +
+  labs(x = "Season", 
+       y = "Average Total Match Goals",
+       title = "Average Total Match Goals per Season in the English Premier League") +
+  scale_fill_manual(values = c("skyblue", "orangered"), labels = c("Before VAR", "After VAR")) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 11), 
+        axis.title.x = element_text(size = 12),
+        legend.text = element_text(size = 12),
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank())
+```
+
+## Line Graphs of Variables Before and After VAR, across all three time comparisons
+
+```{r}
+#| label: Line Graphs for Variables before and after VAR
+#| echo: false
+#| warning: false
+#| error: false
+#| out-width: 100%
+
+
+plot_1_year <- EPL_1 %>%
+  group_by(PostVAR, Wk) %>%
+  summarise(avg_totaloff = mean(totaloff)) %>%
+  ggplot(aes(x = Wk, y = avg_totaloff, group = PostVAR, color = PostVAR)) +
+  geom_line() +
+  geom_point() +
+  labs(x = NULL, title = paste("Average Total Match Offsides by Matchweek in the English Premier League", sep = " "), color = "1 Year Comparison") +
+  scale_color_manual(values = c("steelblue1", "blue"), labels = c("Before VAR", "After VAR")) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 14),
+        axis.text.y = element_text(size = 11), 
+        axis.title.y = element_blank(),   
+        legend.text = element_text(size = 12),
+        panel.grid.minor = element_blank()) +  
+  scale_y_continuous(limits=c(2,6), breaks=c(2, 3, 4, 5, 6))
+
+
+# Plot for 3-year averages
+plot_3_year <- EPL_3 %>%
+  group_by(PostVAR, Wk) %>%
+  summarise(avg_totaloff = mean(totaloff)) %>%
+  ggplot(aes(x = Wk, y = avg_totaloff, group = PostVAR, color = PostVAR)) +
+  geom_line() +
+  geom_point() +
+  labs(x = NULL, y = NULL, color = "3 Year Comparison") +
+  scale_color_manual(values = c("plum2", "magenta"), labels = c("Before VAR", "After VAR")) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 11),
+        legend.text = element_text(size = 12),
+        panel.grid.minor = element_blank()) +
+  scale_y_continuous(limits=c(2,6), breaks=c(2, 3, 4, 5, 6))
+
+# Plot for 5-year averages
+plot_5_year <- EPL_5 %>%
+  group_by(PostVAR, Wk) %>%
+  summarise(avg_totaloff = mean(totaloff)) %>%
+  ggplot(aes(x = Wk, y = avg_totaloff, group = PostVAR, color = PostVAR)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Matchweek", y = NULL, color = "5 Year Comparison") +
+  scale_color_manual(values = c("springgreen2", "darkgreen"), labels = c("Before VAR", "After VAR")) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 11), 
+        axis.title.x = element_text(size = 12),
+        legend.text = element_text(size = 12),
+        panel.grid.minor = element_blank()) +
+  scale_y_continuous(limits=c(2,6), breaks=c(2, 3, 4, 5, 6))
+
+# Combine plots
+combined_plot <- plot_grid(plot_1_year, plot_3_year, plot_5_year, ncol = 1)
+
+# Add common legend
+combined_plot_with_legend <- cowplot::get_legend(plot_1_year) +
+  theme(legend.position = "bottom")
+
+# Display combined plot with legend
+plot_grid(combined_plot, combined_plot_with_legend, nrow = 2, rel_heights = c(10, 1))
+```
+
+## 

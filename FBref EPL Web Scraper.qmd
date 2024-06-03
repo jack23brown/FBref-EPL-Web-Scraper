@@ -1,0 +1,1373 @@
+---
+title: "FBref EPL Web Scraper"
+author: "Jack Kenyon Brown"
+format: html
+editor: visual
+---
+
+# FBref English Premier League Web Scraper
+
+As a part of "The Impact of Video Assistant Referee (VAR) on the English Premier League" by Jack Kenyon Brown, et. al.
+
+```{r}
+#|: label: package-laod
+
+library(RCurl)
+library(XML)
+library(writexl)
+library(readxl)
+library(here)
+```
+
+## Web Scraping
+
+The following 10 code chunks will scrape the data as it appears on the Match Reports on FBref, for every match in the English Premier League, starting with the 2014/15 season through the 2023/24 season.
+
+The "Dataset Formatting" section below provides code to combine the home & away match statistics into total match statistics, creating the final "EPL_Totals" dataset, as used in the analyses in "Impact of Video Assistant Referee (VAR) on the English Premier League" by Jack Brown, et. al.
+
+Documentation with instructions regarding how these template datasets were manually created can be found in the "Template Datafile Setup Instructions.pdf" file in the "Template Datafiles" folder in the GitHub Repository.
+
+### 2014/15 Web Scraper
+
+```{r}
+#Load in template dataset from GitHub repository
+Template_14_15 <- read_excel(here("Template Datasets", "Template_14_15.xlsx"))
+
+
+x <- 1
+y <- 20
+
+while (y < 380){
+  
+  for (i in x:y){
+  #the URL link to each Match Report (containing the match statistics) on FBref is in column 16 of the template dataset
+    link = Template_14_15[i,16] 
+    page = getURL(link)
+    
+    #This saves all of the home and away player stat tables on the Match Report into a list called "data"
+    data = readHTMLTable(page)
+
+    
+    #Table [4] contains home team player stats
+    data.4 = data[[4]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.4.2 <- data.4[,7:23]
+    #Column summing the individual home team player stats to get total team stats, and saving them as a numeric data frame called "HomeTotals"
+    HomeTotals <- colSums(as.data.frame(sapply(data.4.2, as.numeric)))
+    
+    Template_14_15[i,17] <- HomeTotals[1] #Goals
+    Template_14_15[i,18] <- HomeTotals[2] #Assists
+    Template_14_15[i,19] <- HomeTotals[3] #Penalty Kicks Scored
+    Template_14_15[i,20] <- HomeTotals[4] #Penalty Kicks Awarded
+    Template_14_15[i,21] <- HomeTotals[5] #Shots
+    Template_14_15[i,22] <- HomeTotals[6] #Shots on Target
+    Template_14_15[i,23] <- HomeTotals[7] #Yellow Cards
+    Template_14_15[i,24] <- HomeTotals[8] #Red Cards
+    Template_14_15[i,25] <- HomeTotals[9] #Fouls Committed
+    Template_14_15[i,26] <- HomeTotals[10] #Fouls Drawn
+    Template_14_15[i,27] <- HomeTotals[11] #Offsides
+    Template_14_15[i,28] <- HomeTotals[12] #Crosses
+    Template_14_15[i,29] <- HomeTotals[13] #Tackles Won
+    Template_14_15[i,30] <- HomeTotals[14] #Interceptions
+    Template_14_15[i,31] <- HomeTotals[15] #Own Goals
+    
+    # Table [5] contains home team goalkeeper stats
+    data.5 = data[[5]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.5.2 <- data.5[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.5.2))
+    #Column summing the individual home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "Home GK"
+    HomeGK <- colSums(as.data.frame(sapply(data.5.2, as.numeric)))
+    
+    Template_14_15[i,32] <- HomeGK[1] #Saves
+    Template_14_15[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
+    
+    
+    # Table [6] contains away team player stats
+    data.6 = data[[6]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.6.2 <- data.6[,7:23]
+    #Column summing the individual away team player stats to get total team stats, and saving them as a numeric data frame called "AwayTotals"
+    AwayTotals <- colSums(as.data.frame(sapply(data.6.2, as.numeric)))
+    
+    Template_14_15[i,34] <- AwayTotals[1]  # Goals
+    Template_14_15[i,35] <- AwayTotals[2]  # Assists
+    Template_14_15[i,36] <- AwayTotals[3]  # Penalty Kicks Scored
+    Template_14_15[i,37] <- AwayTotals[4]  # Penalty Kicks Awarded
+    Template_14_15[i,38] <- AwayTotals[5]  # Shots
+    Template_14_15[i,39] <- AwayTotals[6]  # Shots on Target
+    Template_14_15[i,40] <- AwayTotals[7]  # Yellow Cards
+    Template_14_15[i,41] <- AwayTotals[8]  # Red Cards
+    Template_14_15[i,42] <- AwayTotals[9]  # Fouls Committed
+    Template_14_15[i,43] <- AwayTotals[10] # Fouls Drawn
+    Template_14_15[i,44] <- AwayTotals[11] # Offsides
+    Template_14_15[i,45] <- AwayTotals[12] # Crosses
+    Template_14_15[i,46] <- AwayTotals[13] # Tackles Won
+    Template_14_15[i,47] <- AwayTotals[14] # Interceptions
+    Template_14_15[i,48] <- AwayTotals[15] # Own Goals
+    
+    
+    # Table [7] contains away team goalkeeper stats
+    data.7 = data[[7]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.7.2 <- data.7[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.7.2))
+    #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
+    AwayGK <- colSums(as.data.frame(sapply(data.7.2, as.numeric)))
+    
+    Template_14_15[i,49] <- AwayGK[1] #Saves
+    Template_14_15[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
+  }
+  
+  #Pauses the webscraping for 2.5 minutes after every 20 calls to follow FBref's web scraping guidelines and avoid being suspended due to overscraping
+  Sys.sleep(150)
+  
+  x <- x + 20
+  y <- y + 20
+  
+}
+```
+
+### 2015/16 Web Scraper
+
+```{r}
+#Load in template dataset from GitHub repository
+Template_15_16 <- read_excel(here("Template Datasets", "Template_15_16.xlsx"))
+
+x <- 1
+y <- 20
+
+while (y < 380){
+  
+  for (i in x:y){
+    #the URL link to each Match Report (containing the match statistics) on FBref is in column 16 of the template dataset
+    link = Template_15_16[i,16] 
+    page = getURL(link)
+    
+    #This saves all of the home and away player stat tables on the Match Report into a list called "data"
+    data = readHTMLTable(page)
+    
+    
+    #Table [4] contains home team player stats
+    data.4 = data[[4]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.4.2 <- data.4[,7:23]
+    #Column summing the individual home team player stats to get total team stats, and saving them as a numeric data frame called "HomeTotals"
+    HomeTotals <- colSums(as.data.frame(sapply(data.4.2, as.numeric)))
+    
+    Template_15_16[i,17] <- HomeTotals[1] #Goals
+    Template_15_16[i,18] <- HomeTotals[2] #Assists
+    Template_15_16[i,19] <- HomeTotals[3] #Penalty Kicks Scored
+    Template_15_16[i,20] <- HomeTotals[4] #Penalty Kicks Awarded
+    Template_15_16[i,21] <- HomeTotals[5] #Shots
+    Template_15_16[i,22] <- HomeTotals[6] #Shots on Target
+    Template_15_16[i,23] <- HomeTotals[7] #Yellow Cards
+    Template_15_16[i,24] <- HomeTotals[8] #Red Cards
+    Template_15_16[i,25] <- HomeTotals[9] #Fouls Committed
+    Template_15_16[i,26] <- HomeTotals[10] #Fouls Drawn
+    Template_15_16[i,27] <- HomeTotals[11] #Offsides
+    Template_15_16[i,28] <- HomeTotals[12] #Crosses
+    Template_15_16[i,29] <- HomeTotals[13] #Tackles Won
+    Template_15_16[i,30] <- HomeTotals[14] #Interceptions
+    Template_15_16[i,31] <- HomeTotals[15] #Own Goals
+    
+    # Table [5] contains home team goalkeeper stats
+    data.5 = data[[5]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.5.2 <- data.5[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.5.2))
+    #Column summing the individual home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "Home GK"
+    HomeGK <- colSums(as.data.frame(sapply(data.5.2, as.numeric)))
+    
+    Template_15_16[i,32] <- HomeGK[1] #Saves
+    Template_15_16[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
+    
+    
+    # Table [6] contains away team player stats
+    data.6 = data[[6]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.6.2 <- data.6[,7:23]
+    #Column summing the individual away team player stats to get total team stats, and saving them as a numeric data frame called "AwayTotals"
+    AwayTotals <- colSums(as.data.frame(sapply(data.6.2, as.numeric)))
+    
+    Template_15_16[i,34] <- AwayTotals[1]  # Goals
+    Template_15_16[i,35] <- AwayTotals[2]  # Assists
+    Template_15_16[i,36] <- AwayTotals[3]  # Penalty Kicks Scored
+    Template_15_16[i,37] <- AwayTotals[4]  # Penalty Kicks Awarded
+    Template_15_16[i,38] <- AwayTotals[5]  # Shots
+    Template_15_16[i,39] <- AwayTotals[6]  # Shots on Target
+    Template_15_16[i,40] <- AwayTotals[7]  # Yellow Cards
+    Template_15_16[i,41] <- AwayTotals[8]  # Red Cards
+    Template_15_16[i,42] <- AwayTotals[9]  # Fouls Committed
+    Template_15_16[i,43] <- AwayTotals[10] # Fouls Drawn
+    Template_15_16[i,44] <- AwayTotals[11] # Offsides
+    Template_15_16[i,45] <- AwayTotals[12] # Crosses
+    Template_15_16[i,46] <- AwayTotals[13] # Tackles Won
+    Template_15_16[i,47] <- AwayTotals[14] # Interceptions
+    Template_15_16[i,48] <- AwayTotals[15] # Own Goals
+    
+    
+    # Table [7] contains away team goalkeeper stats
+    data.7 = data[[7]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.7.2 <- data.7[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.7.2))
+    #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
+    AwayGK <- colSums(as.data.frame(sapply(data.7.2, as.numeric)))
+    
+    Template_15_16[i,49] <- AwayGK[1] #Saves
+    Template_15_16[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
+  }
+  
+  #Pauses the webscraping for 2.5 minutes after every 20 calls to follow FBref's web scraping guidelines and avoid being suspended due to overscraping
+  Sys.sleep(150)
+  
+  x <- x + 20
+  y <- y + 20
+  
+}
+```
+
+### 2016/17 Web Scraper
+
+```{r}
+#Load in template dataset from GitHub repository
+Template_16_17 <- read_excel(here("Template Datasets", "Template_16_17.xlsx"))
+
+x <- 1
+y <- 20
+
+while (y < 380){
+  
+  for (i in x:y){
+    #the URL link to each Match Report (containing the match statistics) on FBref is in column 16 of the template dataset
+    link = Template_16_17[i,16] 
+    page = getURL(link)
+    
+    #This saves all of the home and away player stat tables on the Match Report into a list called "data"
+    data = readHTMLTable(page)
+    
+    
+    #Table [4] contains home team player stats
+    data.4 = data[[4]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.4.2 <- data.4[,7:23]
+    #Column summing the individual home team player stats to get total team stats, and saving them as a numeric data frame called "HomeTotals"
+    HomeTotals <- colSums(as.data.frame(sapply(data.4.2, as.numeric)))
+    
+    Template_16_17[i,17] <- HomeTotals[1] #Goals
+    Template_16_17[i,18] <- HomeTotals[2] #Assists
+    Template_16_17[i,19] <- HomeTotals[3] #Penalty Kicks Scored
+    Template_16_17[i,20] <- HomeTotals[4] #Penalty Kicks Awarded
+    Template_16_17[i,21] <- HomeTotals[5] #Shots
+    Template_16_17[i,22] <- HomeTotals[6] #Shots on Target
+    Template_16_17[i,23] <- HomeTotals[7] #Yellow Cards
+    Template_16_17[i,24] <- HomeTotals[8] #Red Cards
+    Template_16_17[i,25] <- HomeTotals[9] #Fouls Committed
+    Template_16_17[i,26] <- HomeTotals[10] #Fouls Drawn
+    Template_16_17[i,27] <- HomeTotals[11] #Offsides
+    Template_16_17[i,28] <- HomeTotals[12] #Crosses
+    Template_16_17[i,29] <- HomeTotals[13] #Tackles Won
+    Template_16_17[i,30] <- HomeTotals[14] #Interceptions
+    Template_16_17[i,31] <- HomeTotals[15] #Own Goals
+    
+    # Table [5] contains home team goalkeeper stats
+    data.5 = data[[5]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.5.2 <- data.5[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.5.2))
+    #Column summing the individual home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "Home GK"
+    HomeGK <- colSums(as.data.frame(sapply(data.5.2, as.numeric)))
+    
+    Template_16_17[i,32] <- HomeGK[1] #Saves
+    Template_16_17[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
+    
+    
+    # Table [6] contains away team player stats
+    data.6 = data[[6]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.6.2 <- data.6[,7:23]
+    #Column summing the individual away team player stats to get total team stats, and saving them as a numeric data frame called "AwayTotals"
+    AwayTotals <- colSums(as.data.frame(sapply(data.6.2, as.numeric)))
+    
+    Template_16_17[i,34] <- AwayTotals[1]  # Goals
+    Template_16_17[i,35] <- AwayTotals[2]  # Assists
+    Template_16_17[i,36] <- AwayTotals[3]  # Penalty Kicks Scored
+    Template_16_17[i,37] <- AwayTotals[4]  # Penalty Kicks Awarded
+    Template_16_17[i,38] <- AwayTotals[5]  # Shots
+    Template_16_17[i,39] <- AwayTotals[6]  # Shots on Target
+    Template_16_17[i,40] <- AwayTotals[7]  # Yellow Cards
+    Template_16_17[i,41] <- AwayTotals[8]  # Red Cards
+    Template_16_17[i,42] <- AwayTotals[9]  # Fouls Committed
+    Template_16_17[i,43] <- AwayTotals[10] # Fouls Drawn
+    Template_16_17[i,44] <- AwayTotals[11] # Offsides
+    Template_16_17[i,45] <- AwayTotals[12] # Crosses
+    Template_16_17[i,46] <- AwayTotals[13] # Tackles Won
+    Template_16_17[i,47] <- AwayTotals[14] # Interceptions
+    Template_16_17[i,48] <- AwayTotals[15] # Own Goals
+    
+    
+    # Table [7] contains away team goalkeeper stats
+    data.7 = data[[7]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.7.2 <- data.7[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.7.2))
+    #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
+    AwayGK <- colSums(as.data.frame(sapply(data.7.2, as.numeric)))
+    
+    Template_16_17[i,49] <- AwayGK[1] #Saves
+    Template_16_17[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
+  }
+  
+  #Pauses the webscraping for 2.5 minutes after every 20 calls to follow FBref's web scraping guidelines and avoid being suspended due to overscraping
+  Sys.sleep(150)
+  
+  x <- x + 20
+  y <- y + 20
+}
+```
+
+### 2017/18 Web Scraper
+
+```{r}
+#Load in template dataset from GitHub repository
+Template_17_18 <- read_excel(here("Template Datasets", "Template_17_18.xlsx"))
+
+x <- 1
+y <- 20
+
+while (y < 380) {
+  for (i in x:y){
+    #the URL link to each Match Report (containing the match statistics) on FBref is in column 16 of the template dataset
+    links = Template_17_18[i,16]
+    pager = getURL(links)
+    #This saves all of the home and away player stat tables on the Match Report into a list called "data"
+    data = readHTMLTable(pager)
+    
+    
+    #Table [4] contains home team main player stats   
+    data.4 = data[[4]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.4.2 <- data.4[,7:31]
+    #Column summing the individual home team player stats to get total team stats, and saving them as a numeric data frame called "HomeTotals"
+    HomeTotals <- colSums(as.data.frame(sapply(data.4.2, as.numeric)))
+    
+    Template_17_18[i,17] <- HomeTotals[1] #Goals
+    Template_17_18[i,18] <- HomeTotals[2] #Assists
+    Template_17_18[i,19] <- HomeTotals[3] #PKs scored
+    Template_17_18[i,20] <- HomeTotals[4] #PKs attempted
+    Template_17_18[i,21] <- HomeTotals[5] #Shots
+    Template_17_18[i,22] <- HomeTotals[6] #Shots on Target
+    Template_17_18[i,23] <- HomeTotals[7] #Yellow card
+    Template_17_18[i,24] <- HomeTotals[8] #Red card
+    Template_17_18[i,29] <- HomeTotals[10] #Tackles Won 
+    Template_17_18[i,30] <- HomeTotals[11] #Interceptions
+    
+    
+    #Table [6] contains home team passing stats - to get crosses and corners
+    data.6 = data[[6]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.6.2 <- data.6[,c(13, 15,19)]
+    #Column summing the individual home team passing stats to get total team passing stats, and saving them as a numeric data frame called "HomePassData"    
+    HomePassData <- colSums(as.data.frame(sapply(data.6.2, as.numeric)))
+    Template_17_18[i,28] <- HomePassData[1] # Crosses
+    Template_17_18[i,51] <- HomePassData[1] # Corners
+    
+    
+    #Table [9] contains home team miscellaneous stats - to get fouls, offsides, and own goals
+    data.9 = data[[9]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.9.2 <- data.9[,c(10, 11, 12, 18)]
+    #Column summing the individual home team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "HomeMiscData"    
+    HomeMiscData <- colSums(as.data.frame(sapply(data.9.2, as.numeric)))
+    Template_17_18[i,25] <- HomeMiscData[1] # Fouls Committed
+    Template_17_18[i,26] <- HomeMiscData[2] # Fouls Drawn
+    Template_17_18[i,27] <- HomeMiscData[3] # Offsides
+    Template_17_18[i,31] <- HomeMiscData[4] # Own Goals
+    
+    
+    #[10] contains home team goalkeeper stats
+    data.10 = data[[10]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.10.2 <- data.10[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.10.2))
+    #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
+    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    
+    Template_17_18[i,32] <- HomeGK[1] #Saves
+    Template_17_18[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
+    
+    
+    
+    #Table [11] contains away team main player stats
+    data.11 = data[[11]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.11.2 <- data.11[,7:31]
+    #Column summing the individual away team player stats to get total team stats, and saving them as a numeric data frame called "AwayTotals"
+    AwayTotals <- colSums(as.data.frame(sapply(data.11.2, as.numeric)))
+    Template_17_18[i,34] <- AwayTotals[1]  # Goals
+    Template_17_18[i,35] <- AwayTotals[2]  # Assists
+    Template_17_18[i,36] <- AwayTotals[3]  # PKs scored
+    Template_17_18[i,37] <- AwayTotals[4]  # PKs attempted
+    Template_17_18[i,38] <- AwayTotals[5]  # Shots
+    Template_17_18[i,39] <- AwayTotals[6]  # Shots on Target
+    Template_17_18[i,40] <- AwayTotals[7]  # Yellow Cards
+    Template_17_18[i,41] <- AwayTotals[8]  # Red Cards
+    Template_17_18[i,46] <- AwayTotals[10] # Tackles won
+    Template_17_18[i,47] <- AwayTotals[11] # Interceptions
+  
+    
+    #Table [13] contains away team passing stats - to get crosses and corners
+    data.13 = data[[13]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.13.2 <- data.13[,c(13, 15,19)]
+    #Column summing the individual away team passing stats to get total team stats, and saving them as a numeric data frame called "AwayPassData"
+    AwayPassData <- colSums(as.data.frame(sapply(data.13.2, as.numeric)))
+    Template_17_18[i,45] <- AwayPassData[1] # Crosses
+    Template_17_18[i,52] <- AwayPassData[1] # Corners
+    
+    
+    
+    #Table [16] contains away team miscellaneous stats - to get fouls, offsides, and own goals
+    data.16 = data[[16]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.16.2 <- data.16[,c(10, 11, 12, 18)]
+    #Column summing the individual away team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "AwayMiscData"  
+    AwayMiscData <- colSums(as.data.frame(sapply(data.16.2, as.numeric)))
+    Template_17_18[i,42] <- AwayMiscData[1] # Fouls Committed
+    Template_17_18[i,43] <- AwayMiscData[2] # Fouls Drawn
+    Template_17_18[i,44] <- AwayMiscData[3] # Offsides
+    Template_17_18[i,48] <- AwayMiscData[4] # Own Goals
+    
+    
+    #Table [17] contains away team goalkeeper stats
+    data.17 = data[[17]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.17.2 <- data.17[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.17.2))
+    #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
+    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    
+    Template_17_18[i,49] <- AwayGK[1] #Saves
+    Template_17_18[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
+  }
+  
+  Sys.sleep(150)
+  x <- x + 20
+  y <- y + 20
+}  
+```
+
+### 2018/19 Web Scraper
+
+```{r}
+#Load in template dataset from GitHub repository
+Template_18_19 <- read_excel(here("Template Datasets", "Template_18_19.xlsx"))
+
+x <- 1
+y <- 20
+
+while (y < 380) {
+  for (i in x:y){
+    #the URL link to each Match Report (containing the match statistics) on FBref is in column 16 of the template dataset
+    links = Template_18_19[i,16]
+    pager = getURL(links)
+    #This saves all of the home and away player stat tables on the Match Report into a list called "data"
+    data = readHTMLTable(pager)
+    
+    
+    #Table [4] contains home team main player stats   
+    data.4 = data[[4]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.4.2 <- data.4[,7:31]
+    #Column summing the individual home team player stats to get total team stats, and saving them as a numeric data frame called "HomeTotals"
+    HomeTotals <- colSums(as.data.frame(sapply(data.4.2, as.numeric)))
+    
+    Template_18_19[i,17] <- HomeTotals[1] #Goals
+    Template_18_19[i,18] <- HomeTotals[2] #Assists
+    Template_18_19[i,19] <- HomeTotals[3] #PKs scored
+    Template_18_19[i,20] <- HomeTotals[4] #PKs attempted
+    Template_18_19[i,21] <- HomeTotals[5] #Shots
+    Template_18_19[i,22] <- HomeTotals[6] #Shots on Target
+    Template_18_19[i,23] <- HomeTotals[7] #Yellow card
+    Template_18_19[i,24] <- HomeTotals[8] #Red card
+    Template_18_19[i,29] <- HomeTotals[10] #Tackles Won 
+    Template_18_19[i,30] <- HomeTotals[11] #Interceptions
+    
+    
+    #Table [6] contains home team passing stats - to get crosses and corners
+    data.6 = data[[6]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.6.2 <- data.6[,c(13, 15,19)]
+    #Column summing the individual home team passing stats to get total team passing stats, and saving them as a numeric data frame called "HomePassData"    
+    HomePassData <- colSums(as.data.frame(sapply(data.6.2, as.numeric)))
+    Template_18_19[i,28] <- HomePassData[1] # Crosses
+    Template_18_19[i,51] <- HomePassData[1] # Corners
+    
+    
+    #Table [9] contains home team miscellaneous stats - to get fouls, offsides, and own goals
+    data.9 = data[[9]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.9.2 <- data.9[,c(10, 11, 12, 18)]
+    #Column summing the individual home team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "HomeMiscData"    
+    HomeMiscData <- colSums(as.data.frame(sapply(data.9.2, as.numeric)))
+    Template_18_19[i,25] <- HomeMiscData[1] # Fouls Committed
+    Template_18_19[i,26] <- HomeMiscData[2] # Fouls Drawn
+    Template_18_19[i,27] <- HomeMiscData[3] # Offsides
+    Template_18_19[i,31] <- HomeMiscData[4] # Own Goals
+    
+    
+    #[10] contains home team goalkeeper stats
+    data.10 = data[[10]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.10.2 <- data.10[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.10.2))
+    #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
+    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    
+    Template_18_19[i,32] <- HomeGK[1] #Saves
+    Template_18_19[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
+    
+    
+    
+    
+    #Table [11] contains away team main player stats
+    data.11 = data[[11]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.11.2 <- data.11[,7:31]
+    #Column summing the individual away team player stats to get total team stats, and saving them as a numeric data frame called "AwayTotals"
+    AwayTotals <- colSums(as.data.frame(sapply(data.11.2, as.numeric)))
+    Template_18_19[i,34] <- AwayTotals[1]  # Goals
+    Template_18_19[i,35] <- AwayTotals[2]  # Assists
+    Template_18_19[i,36] <- AwayTotals[3]  # PKs scored
+    Template_18_19[i,37] <- AwayTotals[4]  # PKs attempted
+    Template_18_19[i,38] <- AwayTotals[5]  # Shots
+    Template_18_19[i,39] <- AwayTotals[6]  # Shots on Target
+    Template_18_19[i,40] <- AwayTotals[7]  # Yellow Cards
+    Template_18_19[i,41] <- AwayTotals[8]  # Red Cards
+    Template_18_19[i,46] <- AwayTotals[10] # Tackles won
+    Template_18_19[i,47] <- AwayTotals[11] # Interceptions
+    
+    
+    #Table [13] contains away team passing stats - to get crosses and corners
+    data.13 = data[[13]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.13.2 <- data.13[,c(13, 15,19)]
+    #Column summing the individual away team passing stats to get total team stats, and saving them as a numeric data frame called "AwayPassData"
+    AwayPassData <- colSums(as.data.frame(sapply(data.13.2, as.numeric)))
+    Template_18_19[i,45] <- AwayPassData[1] # Crosses
+    Template_18_19[i,52] <- AwayPassData[1] # Corners
+    
+    
+    
+    #Table [16] contains away team miscellaneous stats - to get fouls, offsides, and own goals
+    data.16 = data[[16]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.16.2 <- data.16[,c(10, 11, 12, 18)]
+    #Column summing the individual away team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "AwayMiscData"  
+    AwayMiscData <- colSums(as.data.frame(sapply(data.16.2, as.numeric)))
+    Template_18_19[i,42] <- AwayMiscData[1] # Fouls Committed
+    Template_18_19[i,43] <- AwayMiscData[2] # Fouls Drawn
+    Template_18_19[i,44] <- AwayMiscData[3] # Offsides
+    Template_18_19[i,48] <- AwayMiscData[4] # Own Goals
+    
+    
+    #Table [17] contains away team goalkeeper stats
+    data.17 = data[[17]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.17.2 <- data.17[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.17.2))
+    #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
+    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    
+    Template_18_19[i,49] <- AwayGK[1] #Saves
+    Template_18_19[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
+  }
+  
+  Sys.sleep(150)
+  x <- x + 20
+  y <- y + 20
+}  
+```
+
+### 2019/20 Web Scraper
+
+```{r}
+#Load in template dataset from GitHub repository
+Template_19_20 <- read_excel(here("Template Datasets", "Template_19_20.xlsx"))
+
+x <- 1
+y <- 20
+
+while (y < 380) {
+  for (i in x:y){
+    #the URL link to each Match Report (containing the match statistics) on FBref is in column 16 of the template dataset
+    links = Template_19_20[i,16]
+    pager = getURL(links)
+    #This saves all of the home and away player stat tables on the Match Report into a list called "data"
+    data = readHTMLTable(pager)
+    
+    
+    #Table [4] contains home team main player stats   
+    data.4 = data[[4]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.4.2 <- data.4[,7:31]
+    #Column summing the individual home team player stats to get total team stats, and saving them as a numeric data frame called "HomeTotals"
+    HomeTotals <- colSums(as.data.frame(sapply(data.4.2, as.numeric)))
+    
+    Template_19_20[i,17] <- HomeTotals[1] #Goals
+    Template_19_20[i,18] <- HomeTotals[2] #Assists
+    Template_19_20[i,19] <- HomeTotals[3] #PKs scored
+    Template_19_20[i,20] <- HomeTotals[4] #PKs attempted
+    Template_19_20[i,21] <- HomeTotals[5] #Shots
+    Template_19_20[i,22] <- HomeTotals[6] #Shots on Target
+    Template_19_20[i,23] <- HomeTotals[7] #Yellow card
+    Template_19_20[i,24] <- HomeTotals[8] #Red card
+    Template_19_20[i,29] <- HomeTotals[10] #Tackles Won 
+    Template_19_20[i,30] <- HomeTotals[11] #Interceptions
+    
+    
+    #Table [6] contains home team passing stats - to get crosses and corners
+    data.6 = data[[6]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.6.2 <- data.6[,c(13, 15,19)]
+    #Column summing the individual home team passing stats to get total team passing stats, and saving them as a numeric data frame called "HomePassData"    
+    HomePassData <- colSums(as.data.frame(sapply(data.6.2, as.numeric)))
+    Template_19_20[i,28] <- HomePassData[1] # Crosses
+    Template_19_20[i,51] <- HomePassData[1] # Corners
+    
+    
+    #Table [9] contains home team miscellaneous stats - to get fouls, offsides, and own goals
+    data.9 = data[[9]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.9.2 <- data.9[,c(10, 11, 12, 18)]
+    #Column summing the individual home team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "HomeMiscData"    
+    HomeMiscData <- colSums(as.data.frame(sapply(data.9.2, as.numeric)))
+    Template_19_20[i,25] <- HomeMiscData[1] # Fouls Committed
+    Template_19_20[i,26] <- HomeMiscData[2] # Fouls Drawn
+    Template_19_20[i,27] <- HomeMiscData[3] # Offsides
+    Template_19_20[i,31] <- HomeMiscData[4] # Own Goals
+    
+    
+    #[10] contains home team goalkeeper stats
+    data.10 = data[[10]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.10.2 <- data.10[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.10.2))
+    #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
+    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    
+    Template_19_20[i,32] <- HomeGK[1] #Saves
+    Template_19_20[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
+    
+    
+    
+    
+    #Table [11] contains away team main player stats
+    data.11 = data[[11]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.11.2 <- data.11[,7:31]
+    #Column summing the individual away team player stats to get total team stats, and saving them as a numeric data frame called "AwayTotals"
+    AwayTotals <- colSums(as.data.frame(sapply(data.11.2, as.numeric)))
+    Template_19_20[i,34] <- AwayTotals[1]  # Goals
+    Template_19_20[i,35] <- AwayTotals[2]  # Assists
+    Template_19_20[i,36] <- AwayTotals[3]  # PKs scored
+    Template_19_20[i,37] <- AwayTotals[4]  # PKs attempted
+    Template_19_20[i,38] <- AwayTotals[5]  # Shots
+    Template_19_20[i,39] <- AwayTotals[6]  # Shots on Target
+    Template_19_20[i,40] <- AwayTotals[7]  # Yellow Cards
+    Template_19_20[i,41] <- AwayTotals[8]  # Red Cards
+    Template_19_20[i,46] <- AwayTotals[10] # Tackles won
+    Template_19_20[i,47] <- AwayTotals[11] # Interceptions
+    
+    
+    #Table [13] contains away team passing stats - to get crosses and corners
+    data.13 = data[[13]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.13.2 <- data.13[,c(13, 15,19)]
+    #Column summing the individual away team passing stats to get total team stats, and saving them as a numeric data frame called "AwayPassData"
+    AwayPassData <- colSums(as.data.frame(sapply(data.13.2, as.numeric)))
+    Template_19_20[i,45] <- AwayPassData[1] # Crosses
+    Template_19_20[i,52] <- AwayPassData[1] # Corners
+    
+    
+    
+    #Table [16] contains away team miscellaneous stats - to get fouls, offsides, and own goals
+    data.16 = data[[16]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.16.2 <- data.16[,c(10, 11, 12, 18)]
+    #Column summing the individual away team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "AwayMiscData"  
+    AwayMiscData <- colSums(as.data.frame(sapply(data.16.2, as.numeric)))
+    Template_19_20[i,42] <- AwayMiscData[1] # Fouls Committed
+    Template_19_20[i,43] <- AwayMiscData[2] # Fouls Drawn
+    Template_19_20[i,44] <- AwayMiscData[3] # Offsides
+    Template_19_20[i,48] <- AwayMiscData[4] # Own Goals
+    
+    
+    #Table [17] contains away team goalkeeper stats
+    data.17 = data[[17]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.17.2 <- data.17[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.17.2))
+    #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
+    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    
+    Template_19_20[i,49] <- AwayGK[1] #Saves
+    Template_19_20[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
+  }
+  
+  Sys.sleep(150)
+  x <- x + 20
+  y <- y + 20
+}  
+```
+
+### 2020/21 Web Scraper
+
+```{r}
+#Load in template dataset from GitHub repository
+Template_20_21 <- read_excel(here("Template Datasets", "Template_20_21.xlsx"))
+
+x <- 1
+y <- 20
+
+while (y < 380) {
+  for (i in x:y){
+    #the URL link to each Match Report (containing the match statistics) on FBref is in column 16 of the template dataset
+    links = Template_20_21[i,16]
+    pager = getURL(links)
+    #This saves all of the home and away player stat tables on the Match Report into a list called "data"
+    data = readHTMLTable(pager)
+    
+    
+    #Table [4] contains home team main player stats   
+    data.4 = data[[4]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.4.2 <- data.4[,7:31]
+    #Column summing the individual home team player stats to get total team stats, and saving them as a numeric data frame called "HomeTotals"
+    HomeTotals <- colSums(as.data.frame(sapply(data.4.2, as.numeric)))
+    
+    Template_20_21[i,17] <- HomeTotals[1] #Goals
+    Template_20_21[i,18] <- HomeTotals[2] #Assists
+    Template_20_21[i,19] <- HomeTotals[3] #PKs scored
+    Template_20_21[i,20] <- HomeTotals[4] #PKs attempted
+    Template_20_21[i,21] <- HomeTotals[5] #Shots
+    Template_20_21[i,22] <- HomeTotals[6] #Shots on Target
+    Template_20_21[i,23] <- HomeTotals[7] #Yellow card
+    Template_20_21[i,24] <- HomeTotals[8] #Red card
+    Template_20_21[i,29] <- HomeTotals[10] #Tackles Won 
+    Template_20_21[i,30] <- HomeTotals[11] #Interceptions
+    
+    
+    #Table [6] contains home team passing stats - to get crosses and corners
+    data.6 = data[[6]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.6.2 <- data.6[,c(13, 15,19)]
+    #Column summing the individual home team passing stats to get total team passing stats, and saving them as a numeric data frame called "HomePassData"    
+    HomePassData <- colSums(as.data.frame(sapply(data.6.2, as.numeric)))
+    Template_20_21[i,28] <- HomePassData[1] # Crosses
+    Template_20_21[i,51] <- HomePassData[1] # Corners
+    
+    
+    #Table [9] contains home team miscellaneous stats - to get fouls, offsides, and own goals
+    data.9 = data[[9]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.9.2 <- data.9[,c(10, 11, 12, 18)]
+    #Column summing the individual home team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "HomeMiscData"    
+    HomeMiscData <- colSums(as.data.frame(sapply(data.9.2, as.numeric)))
+    Template_20_21[i,25] <- HomeMiscData[1] # Fouls Committed
+    Template_20_21[i,26] <- HomeMiscData[2] # Fouls Drawn
+    Template_20_21[i,27] <- HomeMiscData[3] # Offsides
+    Template_20_21[i,31] <- HomeMiscData[4] # Own Goals
+    
+    
+    #[10] contains home team goalkeeper stats
+    data.10 = data[[10]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.10.2 <- data.10[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.10.2))
+    #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
+    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    
+    Template_20_21[i,32] <- HomeGK[1] #Saves
+    Template_20_21[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
+    
+    
+    
+    
+    #Table [11] contains away team main player stats
+    data.11 = data[[11]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.11.2 <- data.11[,7:31]
+    #Column summing the individual away team player stats to get total team stats, and saving them as a numeric data frame called "AwayTotals"
+    AwayTotals <- colSums(as.data.frame(sapply(data.11.2, as.numeric)))
+    Template_20_21[i,34] <- AwayTotals[1]  # Goals
+    Template_20_21[i,35] <- AwayTotals[2]  # Assists
+    Template_20_21[i,36] <- AwayTotals[3]  # PKs scored
+    Template_20_21[i,37] <- AwayTotals[4]  # PKs attempted
+    Template_20_21[i,38] <- AwayTotals[5]  # Shots
+    Template_20_21[i,39] <- AwayTotals[6]  # Shots on Target
+    Template_20_21[i,40] <- AwayTotals[7]  # Yellow Cards
+    Template_20_21[i,41] <- AwayTotals[8]  # Red Cards
+    Template_20_21[i,46] <- AwayTotals[10] # Tackles won
+    Template_20_21[i,47] <- AwayTotals[11] # Interceptions
+    
+    
+    #Table [13] contains away team passing stats - to get crosses and corners
+    data.13 = data[[13]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.13.2 <- data.13[,c(13, 15,19)]
+    #Column summing the individual away team passing stats to get total team stats, and saving them as a numeric data frame called "AwayPassData"
+    AwayPassData <- colSums(as.data.frame(sapply(data.13.2, as.numeric)))
+    Template_20_21[i,45] <- AwayPassData[1] # Crosses
+    Template_20_21[i,52] <- AwayPassData[1] # Corners
+    
+    
+    
+    #Table [16] contains away team miscellaneous stats - to get fouls, offsides, and own goals
+    data.16 = data[[16]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.16.2 <- data.16[,c(10, 11, 12, 18)]
+    #Column summing the individual away team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "AwayMiscData"  
+    AwayMiscData <- colSums(as.data.frame(sapply(data.16.2, as.numeric)))
+    Template_20_21[i,42] <- AwayMiscData[1] # Fouls Committed
+    Template_20_21[i,43] <- AwayMiscData[2] # Fouls Drawn
+    Template_20_21[i,44] <- AwayMiscData[3] # Offsides
+    Template_20_21[i,48] <- AwayMiscData[4] # Own Goals
+    
+    
+    #Table [17] contains away team goalkeeper stats
+    data.17 = data[[17]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.17.2 <- data.17[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.17.2))
+    #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
+    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    
+    Template_20_21[i,49] <- AwayGK[1] #Saves
+    Template_20_21[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
+  }
+  
+  Sys.sleep(150)
+  x <- x + 20
+  y <- y + 20
+}  
+```
+
+### 2021/22 Web Scraper
+
+```{r}
+#Load in template dataset from GitHub repository
+Template_21_22 <- read_excel(here("Template Datasets", "Template_21_22.xlsx"))
+
+x <- 1
+y <- 20
+
+while (y < 380) {
+  for (i in x:y){
+    #the URL link to each Match Report (containing the match statistics) on FBref is in column 16 of the template dataset
+    links = Template_21_22[i,16]
+    pager = getURL(links)
+    #This saves all of the home and away player stat tables on the Match Report into a list called "data"
+    data = readHTMLTable(pager)
+    
+    
+    #Table [4] contains home team main player stats   
+    data.4 = data[[4]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.4.2 <- data.4[,7:31]
+    #Column summing the individual home team player stats to get total team stats, and saving them as a numeric data frame called "HomeTotals"
+    HomeTotals <- colSums(as.data.frame(sapply(data.4.2, as.numeric)))
+    
+    Template_21_22[i,17] <- HomeTotals[1] #Goals
+    Template_21_22[i,18] <- HomeTotals[2] #Assists
+    Template_21_22[i,19] <- HomeTotals[3] #PKs scored
+    Template_21_22[i,20] <- HomeTotals[4] #PKs attempted
+    Template_21_22[i,21] <- HomeTotals[5] #Shots
+    Template_21_22[i,22] <- HomeTotals[6] #Shots on Target
+    Template_21_22[i,23] <- HomeTotals[7] #Yellow card
+    Template_21_22[i,24] <- HomeTotals[8] #Red card
+    Template_21_22[i,29] <- HomeTotals[10] #Tackles Won 
+    Template_21_22[i,30] <- HomeTotals[11] #Interceptions
+    
+    
+    #Table [6] contains home team passing stats - to get crosses and corners
+    data.6 = data[[6]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.6.2 <- data.6[,c(13, 15,19)]
+    #Column summing the individual home team passing stats to get total team passing stats, and saving them as a numeric data frame called "HomePassData"    
+    HomePassData <- colSums(as.data.frame(sapply(data.6.2, as.numeric)))
+    Template_21_22[i,28] <- HomePassData[1] # Crosses
+    Template_21_22[i,51] <- HomePassData[1] # Corners
+    
+    
+    #Table [9] contains home team miscellaneous stats - to get fouls, offsides, and own goals
+    data.9 = data[[9]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.9.2 <- data.9[,c(10, 11, 12, 18)]
+    #Column summing the individual home team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "HomeMiscData"    
+    HomeMiscData <- colSums(as.data.frame(sapply(data.9.2, as.numeric)))
+    Template_21_22[i,25] <- HomeMiscData[1] # Fouls Committed
+    Template_21_22[i,26] <- HomeMiscData[2] # Fouls Drawn
+    Template_21_22[i,27] <- HomeMiscData[3] # Offsides
+    Template_21_22[i,31] <- HomeMiscData[4] # Own Goals
+    
+    
+    #[10] contains home team goalkeeper stats
+    data.10 = data[[10]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.10.2 <- data.10[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.10.2))
+    #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
+    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    
+    Template_21_22[i,32] <- HomeGK[1] #Saves
+    Template_21_22[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
+    
+    
+    
+    
+    #Table [11] contains away team main player stats
+    data.11 = data[[11]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.11.2 <- data.11[,7:31]
+    #Column summing the individual away team player stats to get total team stats, and saving them as a numeric data frame called "AwayTotals"
+    AwayTotals <- colSums(as.data.frame(sapply(data.11.2, as.numeric)))
+    Template_21_22[i,34] <- AwayTotals[1]  # Goals
+    Template_21_22[i,35] <- AwayTotals[2]  # Assists
+    Template_21_22[i,36] <- AwayTotals[3]  # PKs scored
+    Template_21_22[i,37] <- AwayTotals[4]  # PKs attempted
+    Template_21_22[i,38] <- AwayTotals[5]  # Shots
+    Template_21_22[i,39] <- AwayTotals[6]  # Shots on Target
+    Template_21_22[i,40] <- AwayTotals[7]  # Yellow Cards
+    Template_21_22[i,41] <- AwayTotals[8]  # Red Cards
+    Template_21_22[i,46] <- AwayTotals[10] # Tackles won
+    Template_21_22[i,47] <- AwayTotals[11] # Interceptions
+    
+    
+    #Table [13] contains away team passing stats - to get crosses and corners
+    data.13 = data[[13]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.13.2 <- data.13[,c(13, 15,19)]
+    #Column summing the individual away team passing stats to get total team stats, and saving them as a numeric data frame called "AwayPassData"
+    AwayPassData <- colSums(as.data.frame(sapply(data.13.2, as.numeric)))
+    Template_21_22[i,45] <- AwayPassData[1] # Crosses
+    Template_21_22[i,52] <- AwayPassData[1] # Corners
+    
+    
+    
+    #Table [16] contains away team miscellaneous stats - to get fouls, offsides, and own goals
+    data.16 = data[[16]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.16.2 <- data.16[,c(10, 11, 12, 18)]
+    #Column summing the individual away team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "AwayMiscData"  
+    AwayMiscData <- colSums(as.data.frame(sapply(data.16.2, as.numeric)))
+    Template_21_22[i,42] <- AwayMiscData[1] # Fouls Committed
+    Template_21_22[i,43] <- AwayMiscData[2] # Fouls Drawn
+    Template_21_22[i,44] <- AwayMiscData[3] # Offsides
+    Template_21_22[i,48] <- AwayMiscData[4] # Own Goals
+    
+    
+    #Table [17] contains away team goalkeeper stats
+    data.17 = data[[17]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.17.2 <- data.17[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.17.2))
+    #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
+    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    
+    Template_21_22[i,49] <- AwayGK[1] #Saves
+    Template_21_22[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
+  }
+  
+  Sys.sleep(150)
+  x <- x + 20
+  y <- y + 20
+}  
+```
+
+### 2022/23 Web Scraper
+
+```{r}
+#Load in template dataset from GitHub repository
+Template_22_23 <- read_excel(here("Template Datasets", "Template_22_23.xlsx"))
+
+x <- 1
+y <- 20
+
+while (y < 380) {
+  for (i in x:y){
+    #the URL link to each Match Report (containing the match statistics) on FBref is in column 16 of the template dataset
+    links = Template_22_23[i,16]
+    pager = getURL(links)
+    #This saves all of the home and away player stat tables on the Match Report into a list called "data"
+    data = readHTMLTable(pager)
+    
+    
+    #Table [4] contains home team main player stats   
+    data.4 = data[[4]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.4.2 <- data.4[,7:31]
+    #Column summing the individual home team player stats to get total team stats, and saving them as a numeric data frame called "HomeTotals"
+    HomeTotals <- colSums(as.data.frame(sapply(data.4.2, as.numeric)))
+    
+    Template_22_23[i,17] <- HomeTotals[1] #Goals
+    Template_22_23[i,18] <- HomeTotals[2] #Assists
+    Template_22_23[i,19] <- HomeTotals[3] #PKs scored
+    Template_22_23[i,20] <- HomeTotals[4] #PKs attempted
+    Template_22_23[i,21] <- HomeTotals[5] #Shots
+    Template_22_23[i,22] <- HomeTotals[6] #Shots on Target
+    Template_22_23[i,23] <- HomeTotals[7] #Yellow card
+    Template_22_23[i,24] <- HomeTotals[8] #Red card
+    Template_22_23[i,29] <- HomeTotals[10] #Tackles Won 
+    Template_22_23[i,30] <- HomeTotals[11] #Interceptions
+    
+    
+    #Table [6] contains home team passing stats - to get crosses and corners
+    data.6 = data[[6]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.6.2 <- data.6[,c(13, 15,19)]
+    #Column summing the individual home team passing stats to get total team passing stats, and saving them as a numeric data frame called "HomePassData"    
+    HomePassData <- colSums(as.data.frame(sapply(data.6.2, as.numeric)))
+    Template_22_23[i,28] <- HomePassData[1] # Crosses
+    Template_22_23[i,51] <- HomePassData[1] # Corners
+    
+    
+    #Table [9] contains home team miscellaneous stats - to get fouls, offsides, and own goals
+    data.9 = data[[9]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.9.2 <- data.9[,c(10, 11, 12, 18)]
+    #Column summing the individual home team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "HomeMiscData"    
+    HomeMiscData <- colSums(as.data.frame(sapply(data.9.2, as.numeric)))
+    Template_22_23[i,25] <- HomeMiscData[1] # Fouls Committed
+    Template_22_23[i,26] <- HomeMiscData[2] # Fouls Drawn
+    Template_22_23[i,27] <- HomeMiscData[3] # Offsides
+    Template_22_23[i,31] <- HomeMiscData[4] # Own Goals
+    
+    
+    #[10] contains home team goalkeeper stats
+    data.10 = data[[10]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.10.2 <- data.10[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.10.2))
+    #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
+    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    
+    Template_22_23[i,32] <- HomeGK[1] #Saves
+    Template_22_23[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
+    
+    
+    
+    
+    #Table [11] contains away team main player stats
+    data.11 = data[[11]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.11.2 <- data.11[,7:31]
+    #Column summing the individual away team player stats to get total team stats, and saving them as a numeric data frame called "AwayTotals"
+    AwayTotals <- colSums(as.data.frame(sapply(data.11.2, as.numeric)))
+    Template_22_23[i,34] <- AwayTotals[1]  # Goals
+    Template_22_23[i,35] <- AwayTotals[2]  # Assists
+    Template_22_23[i,36] <- AwayTotals[3]  # PKs scored
+    Template_22_23[i,37] <- AwayTotals[4]  # PKs attempted
+    Template_22_23[i,38] <- AwayTotals[5]  # Shots
+    Template_22_23[i,39] <- AwayTotals[6]  # Shots on Target
+    Template_22_23[i,40] <- AwayTotals[7]  # Yellow Cards
+    Template_22_23[i,41] <- AwayTotals[8]  # Red Cards
+    Template_22_23[i,46] <- AwayTotals[10] # Tackles won
+    Template_22_23[i,47] <- AwayTotals[11] # Interceptions
+    
+    
+    #Table [13] contains away team passing stats - to get crosses and corners
+    data.13 = data[[13]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.13.2 <- data.13[,c(13, 15,19)]
+    #Column summing the individual away team passing stats to get total team stats, and saving them as a numeric data frame called "AwayPassData"
+    AwayPassData <- colSums(as.data.frame(sapply(data.13.2, as.numeric)))
+    Template_22_23[i,45] <- AwayPassData[1] # Crosses
+    Template_22_23[i,52] <- AwayPassData[1] # Corners
+    
+    
+    
+    #Table [16] contains away team miscellaneous stats - to get fouls, offsides, and own goals
+    data.16 = data[[16]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.16.2 <- data.16[,c(10, 11, 12, 18)]
+    #Column summing the individual away team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "AwayMiscData"  
+    AwayMiscData <- colSums(as.data.frame(sapply(data.16.2, as.numeric)))
+    Template_22_23[i,42] <- AwayMiscData[1] # Fouls Committed
+    Template_22_23[i,43] <- AwayMiscData[2] # Fouls Drawn
+    Template_22_23[i,44] <- AwayMiscData[3] # Offsides
+    Template_22_23[i,48] <- AwayMiscData[4] # Own Goals
+    
+    
+    #Table [17] contains away team goalkeeper stats
+    data.17 = data[[17]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.17.2 <- data.17[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.17.2))
+    #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
+    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    
+    Template_22_23[i,49] <- AwayGK[1] #Saves
+    Template_22_23[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
+  }
+  
+  Sys.sleep(150)
+  x <- x + 20
+  y <- y + 20
+}  
+```
+
+### 2023/24 Web Scraper
+
+```{r}
+#Load in template dataset from GitHub repository
+Template_23_24 <- read_excel(here("Template Datasets", "Template_23_24.xlsx"))
+
+x <- 1
+y <- 20
+
+while (y < 380) {
+  for (i in x:y){
+    #the URL link to each Match Report (containing the match statistics) on FBref is in column 16 of the template dataset
+    links = Template_23_24[i,16]
+    pager = getURL(links)
+    #This saves all of the home and away player stat tables on the Match Report into a list called "data"
+    data = readHTMLTable(pager)
+    
+    
+    #Table [4] contains home team main player stats   
+    data.4 = data[[4]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.4.2 <- data.4[,7:31]
+    #Column summing the individual home team player stats to get total team stats, and saving them as a numeric data frame called "HomeTotals"
+    HomeTotals <- colSums(as.data.frame(sapply(data.4.2, as.numeric)))
+    
+    Template_23_24[i,17] <- HomeTotals[1] #Goals
+    Template_23_24[i,18] <- HomeTotals[2] #Assists
+    Template_23_24[i,19] <- HomeTotals[3] #PKs scored
+    Template_23_24[i,20] <- HomeTotals[4] #PKs attempted
+    Template_23_24[i,21] <- HomeTotals[5] #Shots
+    Template_23_24[i,22] <- HomeTotals[6] #Shots on Target
+    Template_23_24[i,23] <- HomeTotals[7] #Yellow card
+    Template_23_24[i,24] <- HomeTotals[8] #Red card
+    Template_23_24[i,29] <- HomeTotals[10] #Tackles Won 
+    Template_23_24[i,30] <- HomeTotals[11] #Interceptions
+    
+    
+    #Table [6] contains home team passing stats - to get crosses and corners
+    data.6 = data[[6]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.6.2 <- data.6[,c(13, 15,19)]
+    #Column summing the individual home team passing stats to get total team passing stats, and saving them as a numeric data frame called "HomePassData"    
+    HomePassData <- colSums(as.data.frame(sapply(data.6.2, as.numeric)))
+    Template_23_24[i,28] <- HomePassData[1] # Crosses
+    Template_23_24[i,51] <- HomePassData[1] # Corners
+    
+    
+    #Table [9] contains home team miscellaneous stats - to get fouls, offsides, and own goals
+    data.9 = data[[9]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.9.2 <- data.9[,c(10, 11, 12, 18)]
+    #Column summing the individual home team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "HomeMiscData"    
+    HomeMiscData <- colSums(as.data.frame(sapply(data.9.2, as.numeric)))
+    Template_23_24[i,25] <- HomeMiscData[1] # Fouls Committed
+    Template_23_24[i,26] <- HomeMiscData[2] # Fouls Drawn
+    Template_23_24[i,27] <- HomeMiscData[3] # Offsides
+    Template_23_24[i,31] <- HomeMiscData[4] # Own Goals
+    
+    
+    #[10] contains home team goalkeeper stats
+    data.10 = data[[10]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.10.2 <- data.10[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.10.2))
+    #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
+    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    
+    Template_23_24[i,32] <- HomeGK[1] #Saves
+    Template_23_24[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
+    
+    
+    
+    
+    #Table [11] contains away team main player stats
+    data.11 = data[[11]]
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.11.2 <- data.11[,7:31]
+    #Column summing the individual away team player stats to get total team stats, and saving them as a numeric data frame called "AwayTotals"
+    AwayTotals <- colSums(as.data.frame(sapply(data.11.2, as.numeric)))
+    Template_23_24[i,34] <- AwayTotals[1]  # Goals
+    Template_23_24[i,35] <- AwayTotals[2]  # Assists
+    Template_23_24[i,36] <- AwayTotals[3]  # PKs scored
+    Template_23_24[i,37] <- AwayTotals[4]  # PKs attempted
+    Template_23_24[i,38] <- AwayTotals[5]  # Shots
+    Template_23_24[i,39] <- AwayTotals[6]  # Shots on Target
+    Template_23_24[i,40] <- AwayTotals[7]  # Yellow Cards
+    Template_23_24[i,41] <- AwayTotals[8]  # Red Cards
+    Template_23_24[i,46] <- AwayTotals[10] # Tackles won
+    Template_23_24[i,47] <- AwayTotals[11] # Interceptions
+    
+    
+    #Table [13] contains away team passing stats - to get crosses and corners
+    data.13 = data[[13]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.13.2 <- data.13[,c(13, 15,19)]
+    #Column summing the individual away team passing stats to get total team stats, and saving them as a numeric data frame called "AwayPassData"
+    AwayPassData <- colSums(as.data.frame(sapply(data.13.2, as.numeric)))
+    Template_23_24[i,45] <- AwayPassData[1] # Crosses
+    Template_23_24[i,52] <- AwayPassData[1] # Corners
+    
+    
+    
+    #Table [16] contains away team miscellaneous stats - to get fouls, offsides, and own goals
+    data.16 = data[[16]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.16.2 <- data.16[,c(10, 11, 12, 18)]
+    #Column summing the individual away team miscellaneous stats to get total team stats, and saving them as a numeric data frame called "AwayMiscData"  
+    AwayMiscData <- colSums(as.data.frame(sapply(data.16.2, as.numeric)))
+    Template_23_24[i,42] <- AwayMiscData[1] # Fouls Committed
+    Template_23_24[i,43] <- AwayMiscData[2] # Fouls Drawn
+    Template_23_24[i,44] <- AwayMiscData[3] # Offsides
+    Template_23_24[i,48] <- AwayMiscData[4] # Own Goals
+    
+    
+    #Table [17] contains away team goalkeeper stats
+    data.17 = data[[17]];
+    #Selecting only the columns containing match statistics of interest, not player info
+    data.17.2 <- data.17[,7:8]
+    #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
+    NumOfGKs <- as.numeric(length(data.17.2))
+    #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
+    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    
+    Template_23_24[i,49] <- AwayGK[1] #Saves
+    Template_23_24[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
+  }
+  
+  Sys.sleep(150)
+  x <- x + 20
+  y <- y + 20
+} 
+```
+
+## Dataset Formatting
+
+```{r}
+EPL_Data <- rbind(Template_14_15,
+                  Template_15_16,
+                  Template_16_17,
+                  Template_17_18,
+                  Template_18_19,
+                  Template_19_20,
+                  Template_20_21,
+                  Template_21_22,
+                  Template_22_23,
+                  Template_23_24)
+```
+
+EPL_Totals dataset, as used in the analyses in "Impact of Video Assistant Referee (VAR) on the English Premier League" by Jack Brown, et. al.
+
+```{r}
+#Remove unnecessary variables (Column 9 is score, Column 16 is URLs)
+EPL <- EPL_Data[,-c(9,16)] 
+
+
+#Combine all home & away variables to get match totals
+for (j in 1:3800){
+  for (i in 15:31){
+    varname <- str_sub(names(EPL)[i], end = -3)
+    newname <- paste("total", varname, sep = "")
+  
+    EPL[j,i+36] <- EPL[j,i] + EPL[j,i+17] 
+    
+    names(EPL)[i+36] <- newname}
+}
+
+#Creating new Total GK Save Pct Variable into Average (USE TOTAL SOT AND TOTALGOALS TO CREATE)
+for (j in 1:3800){
+  EPL[j,67] <- EPL[j,67]/2}
+names(EPL)[67] <- 'avgsavepct'
+
+#Create Total xG Variable
+for (j in 1:3800){
+  EPL[j,68] <- as.numeric(EPL[j,7]) + as.numeric(EPL[j,10])}
+names(EPL)[68] <- 'totalxg'
+
+#Create PK Conversion Rate Variable
+for (j in 1:3800){
+  EPL[j,69] <- EPL[j,53] / EPL[j,54]}
+names(EPL)[69] <- 'totalpkconvrate'
+
+#Creating Post-VAR Indicator Variable
+EPL <- cbind(EPL, c(rep(0, 1900), rep(1, 1900)))
+names(EPL)[70] <- 'PostVAR'
+
+#Creating HSG variable (High Scoring Game [7+ totalgoals])
+for (j in 1:3800) {
+if (!is.na(EPL[j, 51]) && EPL[j, 51] > 6) {
+    EPL[j, 71] <- 1
+  } else {
+    EPL[j, 71] <- 0
+  }
+}
+names(EPL)[71] <- 'HSG'
+
+#Creating NSG variable (No Scoring Game [0 totalgoals])
+for (j in 1:3800) {
+  if (!is.na(EPL[j, 51]) && EPL[j, 51] == 0) {
+    EPL[j, 72] <- 1
+  } else {
+    EPL[j, 72] <- 0
+  }
+}
+names(EPL)[72] <- 'NSG'
+
+
+#Creating Total Cards Variable (totalred + totalyellow)
+for (j in 1:3800){
+  EPL[j,73] <- EPL[j,57] + EPL[j,58]}
+names(EPL)[73] <- 'totalcards'
+
+#Export EPL Dataset here
+ #write_xlsx(EPL, "/Users/jackbrown/Desktop/Thesis/EPL.xlsx")
+
+# Create Total Corners variable
+for (j in 1:3800){
+  EPL[j,74] <- EPL[j,49] + EPL[j,50]}
+names(EPL)[74] <- 'totalcorners'
+
+
+#New Data Frame with total match variables only, cutting out the separate home and away variables
+EPL_Totals <- EPL[,-c(15:50)]
+
+
+#Setting Season, Week, Day, and PostVAR variables as factors
+EPL_Totals$Season <- factor(EPL_Totals$Season, levels = unique(EPL_Totals$Season))
+EPL_Totals$Wk <- factor(EPL_Totals$Wk, levels = unique(EPL_Totals$Wk))
+EPL_Totals$Day <- factor(EPL_Totals$Day, levels = unique(EPL_Totals$Day))
+EPL_Totals$PostVAR <- factor(EPL_Totals$PostVAR, levels = unique(EPL_Totals$PostVAR))
+
+
+#Export final EPL_Totals dataset
+write_xlsx(EPL_Totals, here("Template Datasets", "EPL_Totals.xlsx"))
+```
