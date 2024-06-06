@@ -1,0 +1,627 @@
+---
+title: "EPL Datat Analysis"
+author: "Jack Kenyon Brown"
+format: html
+editor: visual
+embed-resources: true
+---
+
+# EPL Data Analysis
+
+As a part of "The Impact of Video Assistant Referee (VAR) on the English Premier League" by Jack Kenyon Brown, et. al.
+
+```{r}
+#| label: Load Packages
+#| echo: false
+#| warning: false
+
+library(tidyverse)
+library(lme4)
+library(MASS)
+library(stats)
+library(car)
+library(coin)
+library(readxl)
+library(writexl)
+library(gt)
+library(lmtest)
+library(dplyr)
+library(multcompView)
+library(asht)
+library(usethis)
+library(nortest)
+library(gridExtra)
+```
+
+## Data Prep
+
+```{r}
+#| label: Import, Format, and Filter Data
+#| output: false
+#| echo: true
+
+#This analysis requires the "EPL_Totals" dataset, the can be obtained using the web scraping tools found in the "FBref EPL Web Scraper.qmd" found in the GitHub repository
+
+
+#Import EPL_Totals dataset
+
+
+#Be sure to assign Season, Week, and PostVAR variables as factors
+EPL_Totals$Season <- factor(EPL_Totals$Season, levels = unique(EPL_Totals$Season))
+EPL_Totals$Wk <- factor(EPL_Totals$Wk, levels = unique(EPL_Totals$Wk))
+EPL_Totals$PostVAR <- factor(EPL_Totals$PostVAR, levels = unique(EPL_Totals$PostVAR))
+
+
+#1 year comparison data
+EPL_1 <- EPL_Totals %>%
+  filter(Season %in% c("18/19", "19/20"))
+
+#3 year comparison data
+EPL_3 <- EPL_Totals %>%
+  filter(Season %in% c("16/17", "17/18", "18/19", "19/20", "20/21", "21/22"))
+
+#5 year comparison data
+EPL_5 <- EPL_Totals
+```
+
+## Variables of Interest
+
+|                       |                 |
+|:---------------------:|:---------------:|
+|    ***Variable***     | ***Code Name*** |
+|         Goals         |   totalgoals    |
+|         Fouls         |  totalfoulscom  |
+| Penalty Kicks Awarded |   totalpksatt   |
+| Penalty Kicks Scored  |  totalpksmade   |
+|         Shots         |   totalshots    |
+|       Offsides        |    totaloff     |
+|       Red Cards       |    totalred     |
+|     Yellow Cards      |   totalyellow   |
+|        Tackles        | totaltackleswon |
+|     Interceptions     |    totalint     |
+
+## -
+
+## Checking Normality Assumption
+
+### SW, AD, and KS Tests
+
+```{r}
+#| label: Shapiro-Wilk, Anderson-Darling, and Kolmogorov-Smirnov Tests for Normality
+#| warning: false
+
+# List of variables of interest
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", "totalshots", "totaloff", "totalred", "totalyellow", "totaltackleswon", "totalint")
+
+# Create an empty dataframe to store the results
+normality_results <- data.frame(Dataset = character(), Variable = character(), Shapiro_Wilk_p = numeric(), KS_p = numeric(), AD_p = numeric(), stringsAsFactors = FALSE)
+
+# List of datasets
+datasets <- list(EPL_1 = EPL_1, EPL_3 = EPL_3, EPL_5 = EPL_5)
+
+# Loop over each variable and dataset
+for (dataset_name in names(datasets)) {
+  for (var in variables) {
+    # Extract the data for the current variable from the current dataset
+    data <- na.omit(datasets[[dataset_name]][[var]])
+    
+    # Perform Shapiro-Wilk test
+    shapiro_result <- shapiro.test(data)
+    
+    # Perform Kolmogorov-Smirnov test
+    ks_result <- ks.test(data, "pnorm", mean = mean(data), sd = sd(data))
+    
+    # Perform Anderson-Darling test
+    ad_result <- ad.test(data)
+    
+    # Append the results to the dataframe
+    normality_results <- rbind(normality_results, data.frame(
+      Dataset = dataset_name,
+      Variable = var,
+      SW_p = formatC(shapiro_result$p.value, format = "f", digits = 5),
+      KS_p = formatC(ks_result$p.value, format = "f", digits = 5),
+      AD_p = formatC(ad_result$p.value, format = "f", digits = 5)
+    ))
+  }
+}
+
+# Order the results by Variable
+normality_results <- normality_results[order(normality_results$Variable), ]
+
+# Display the results
+print(normality_results)
+```
+
+### Histograms of Response Variables
+
+```{r}
+#| label: Histograms of 10 variables of interest for 1 year comparison data
+#| warning: false
+
+# Specify the variables
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", 
+              "totalshots", "totaloff",  
+               "totalred", "totalyellow", "totaltackleswon", "totalint")
+
+# Create a list to store the plots
+plots <- list()
+
+# Generate a histogram for each variable and store it in the list
+for (var in variables) {
+  p <- ggplot(EPL_1, aes_string(x = var)) + 
+    geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+    theme_minimal()
+  plots[[var]] <- p
+}
+
+# Arrange the plots in a 4x3 grid
+do.call("grid.arrange", c(plots, ncol = 3))
+```
+
+```{r}
+#| label: Histograms of 10 variables of interest for 3 year comparison data
+#| warning: false
+
+# Specify the variables
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", 
+               "totalshots", "totaloff",  
+               "totalred", "totalyellow", "totaltackleswon", "totalint")
+
+# Create a list to store the plots
+plots <- list()
+
+# Generate a histogram for each variable and store it in the list
+for (var in variables) {
+  p <- ggplot(EPL_3, aes_string(x = var)) + 
+    geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+    theme_minimal()
+  plots[[var]] <- p
+}
+
+# Arrange the plots in a 4x3 grid
+do.call("grid.arrange", c(plots, ncol = 3))
+```
+
+```{r}
+#| label: Histograms of 10 variables of interest for 5 year comparison data
+#| warning: false
+
+# Specify the variables
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", 
+               "totalshots", "totaloff",  
+               "totalred", "totalyellow", "totaltackleswon", "totalint")
+
+# Create a list to store the plots
+plots <- list()
+
+# Generate a histogram for each variable and store it in the list
+for (var in variables) {
+  p <- ggplot(EPL_5, aes_string(x = var)) + 
+    geom_histogram(binwidth = 1, fill = "blue", color = "black") +
+    theme_minimal()
+  plots[[var]] <- p
+}
+
+# Arrange the plots in a 4x3 grid
+do.call("grid.arrange", c(plots, ncol = 3))
+```
+
+## Checking Equal Variance Assumption
+
+### BP and Levene's Tests
+
+```{r}
+#| label: Brusch-Pagan and Levene`s Tests for Normality
+#| warning: false
+
+
+# List of variables of interest
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", "totalshots", "totaloff", "totalred", "totalyellow", "totaltackleswon", "totalint")
+
+# Create an empty dataframe to store the results
+eqvar_results <- data.frame(Variable = character(), levTest_1p = numeric(), levTest_3p = numeric(), levTest_5p = numeric(), bpTest_1p = numeric(), bpTest_3p = numeric(), bpTest_5p = numeric(), stringsAsFactors = FALSE)
+
+# Loop over each variable
+for (var in variables) {
+  
+  # Levene Test for EPL_1
+  levTest1 <- leveneTest(get(var) ~ as.factor(PostVAR), data = EPL_1)
+  levP1 <- levTest1$`Pr(>F)`[1]
+  
+  # Levene Test for EPL_3
+  levTest3 <- leveneTest(get(var) ~ as.factor(PostVAR), data = EPL_3)
+  levP3 <- levTest3$`Pr(>F)`[1]
+  
+  # Levene Test for EPL_5
+  levTest5 <- leveneTest(get(var) ~ as.factor(PostVAR), data = EPL_5)
+  levP5 <- levTest5$`Pr(>F)`[1]
+
+  # Breusch-Pagan Test for EPL_1
+  bpTest1 <- bptest(get(var) ~ PostVAR, data = EPL_1)
+  bpP1 <- bpTest1$p.value
+
+  # Breusch-Pagan Test for EPL_3
+  bpTest3 <- bptest(get(var) ~ PostVAR, data = EPL_3)
+  bpP3 <- bpTest3$p.value
+
+  # Breusch-Pagan Test for EPL_5
+  bpTest5 <- bptest(get(var) ~ PostVAR, data = EPL_5)
+  bpP5 <- bpTest5$p.value
+  
+  # Append the results to the dataframe
+  eqvar_results <- rbind(eqvar_results, data.frame(
+    Variable = var,
+    levTest_1p = formatC(levP1, format = "f", digits = 5),
+    levTest_3p = formatC(levP3, format = "f", digits = 5),
+    levTest_5p = formatC(levP5, format = "f", digits = 5),
+    bpTest_1p = formatC(bpP1, format = "f", digits = 5),
+    bpTest_3p = formatC(bpP3, format = "f", digits = 5),
+    bpTest_5p = formatC(bpP5, format = "f", digits = 5)
+  ))
+}
+
+# Display the results
+print(eqvar_results)
+```
+
+## -
+
+## T-Tests
+
+```{r}
+#| label: T-Test Analysis
+#| warning: false
+
+# List of variables of interest
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", "totalshots", "totaloff", "totalred", "totalyellow", "totaltackleswon", "totalint")
+
+# Create an empty list to store t-test results
+t_test_results_no_ev <- list()
+
+# Loop over each variable
+for (var in variables) {
+  # 1 year
+  t_test_1 <- t.test(get(var) ~ PostVAR, var.equal = FALSE, data = EPL_1)
+  # 3 years
+  t_test_3 <- t.test(get(var) ~ PostVAR, var.equal = FALSE, data = EPL_3)
+  # 5 years
+  t_test_5 <- t.test(get(var) ~ PostVAR, var.equal = FALSE, data = EPL_5)
+  
+  # Extract t-test estimate, 95% CI, and p-value, and store in data frame
+  result_df <- data.frame(
+    Variable = var,
+    `1 year` = c(t_test_1$estimate, t_test_1$conf.int, t_test_1$p.value),
+    `3 years` = c(t_test_3$estimate, t_test_3$conf.int, t_test_3$p.value),
+    `5 years` = c(t_test_5$estimate, t_test_5$conf.int, t_test_5$p.value)
+  )
+  
+  #Store results in a list
+  t_test_results_no_ev[[var]] <- result_df
+}
+```
+
+## Mann-Whitney U-Tests
+
+```{r}
+#| label: Mann-Whitney U-Test Analysis
+#| warning: false
+
+# List of variables of interest
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", "totalshots", "totaloff", "totalred", "totalyellow", "totaltackleswon", "totalint")
+
+# Create an empty dataframe to store all t-test results
+MW_U_results <- data.frame()
+
+# Loop over each variable
+for (var in variables) {
+  # 1 year
+  t_test_1 <- wmwTest(get(var) ~ PostVAR, data = EPL_1)
+  # 3 years
+  t_test_3 <- wmwTest(get(var) ~ PostVAR, data = EPL_3)
+  # 5 years
+  t_test_5 <- wmwTest(get(var) ~ PostVAR, data = EPL_5)
+  
+  # Extract relevant information and store in data frame
+  result_df <- data.frame(
+    Variable = var,
+    Test = c("Estimate", "Conf.Lower", "Conf.Upper", "P.Value"),
+    `1_year` = c(t_test_1$estimate, t_test_1$conf.int[1], t_test_1$conf.int[2], t_test_1$p.value),
+    `3_years` = c(t_test_3$estimate, t_test_3$conf.int[1], t_test_3$conf.int[2], t_test_3$p.value),
+    `5_years` = c(t_test_5$estimate, t_test_5$conf.int[1], t_test_5$conf.int[2], t_test_5$p.value)
+  )
+  
+  # Append results to the master dataframe
+  MW_U_results <- bind_rows(MW_U_results, result_df[4,])
+}
+```
+
+## Generalized Linear Models
+
+```{r}
+#| label: Generalized Linear Models analysis
+#| warning: false
+
+# List of variables of interest
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", "totalshots", "totaloff", "totalred", "totalyellow", "totaltackleswon", "totalint")
+
+# Create an empty dataframe to store all t-test results
+GLM_results <- data.frame()
+
+# Loop over each variable
+for (var in variables) {
+  # 1 year
+  glm_1 <- glm.nb(get(var) ~ PostVAR, link = "log", data = EPL_1)
+  # 3 years
+  glm_3 <- glm.nb(get(var) ~ PostVAR, link = "log", data = EPL_3)
+  # 5 years
+  glm_5 <- glm.nb(get(var) ~ PostVAR, link = "log", data = EPL_5)
+  
+  # Extract relevant information and store in data frame
+  result_df <- data.frame(
+    Variable = var,
+    Test = c("p-value", "AIC"),
+    `1_year` = c(summary(glm_1)$coefficients[8], summary(glm_1)$aic),
+    `3_years` = c(summary(glm_3)$coefficients[8], summary(glm_3)$aic),
+    `5_years` = c(summary(glm_5)$coefficients[8], summary(glm_5)$aic)
+  )
+  
+  # Append results to the master dataframe
+  GLM_results <- bind_rows(GLM_results, result_df[1:2,])
+}
+
+print(GLM_results)
+```
+
+```{r}
+#| label: Generalized Linear Models Confidence Intervals
+
+# List of variables to perform GLM and compute confidence intervals
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", 
+                "totalshots", "totaloff", "totalred", 
+               "totalyellow", "totaltackleswon", "totalint")
+
+# List of datasets
+datasets <- list(EPL_1 = EPL_1, EPL_3 = EPL_3, EPL_5 = EPL_5)
+
+# Initialize a list to store all results
+all_results <- list()
+
+# Outer loop over each dataset
+for (dataset_name in names(datasets)) {
+  dataset <- datasets[[dataset_name]]
+  
+  # Initialize a list to store results for the current dataset
+  dataset_results <- list()
+  
+  # Inner loop over each variable
+  for (var in variables) {
+    # Fit the GLM with negative binomial distribution
+    glm_model <- glm.nb(as.formula(paste(var, "~ as.factor(PostVAR)")), data = dataset, link = "log")
+    
+    # Predict the mean response for PostVAR = 0 and PostVAR = 1 on the link scale
+    new_data <- data.frame(PostVAR = c(0, 1))
+    predictions <- predict(glm_model, newdata = new_data, type = "link", se.fit = TRUE)
+    
+    # Extract the fitted values and their standard errors on the link scale
+    fit_values <- predictions$fit
+    se_values <- predictions$se.fit
+    
+    # Compute the critical value for the 95% confidence interval
+    alpha <- 0.05
+    z <- qnorm(1 - alpha / 2)
+    
+    # Calculate the confidence intervals on the link scale
+    link_lower <- fit_values - z * se_values
+    link_upper <- fit_values + z * se_values
+    
+    # Transform the predictions and confidence intervals back to the response scale
+    response_fit <- glm_model$family$linkinv(fit_values)
+    response_lower <- glm_model$family$linkinv(link_lower)
+    response_upper <- glm_model$family$linkinv(link_upper)
+    
+    # Calculate the difference and its standard error
+    diff_fit <- response_fit[2] - response_fit[1]
+    diff_se <- sqrt((response_fit[2] * se_values[2])^2 + (response_fit[1] * se_values[1])^2)
+    
+    # Compute the confidence interval for the difference
+    diff_lower <- diff_fit - z * diff_se
+    diff_upper <- diff_fit + z * diff_se
+    
+    # Combine results into a data frame
+    results <- data.frame(
+      Dataset = dataset_name,
+      Variable = var,
+      PostVAR = c(0, 1),
+      fitted_values = response_fit,
+      lower_bound = response_lower,
+      upper_bound = response_upper
+    )
+    
+    # Add the difference and its confidence interval
+    GLM_CIs <- data.frame(
+      Dataset = dataset_name,
+      Variable = var,
+      difference = diff_fit,
+      lower_bound = diff_lower,
+      upper_bound = diff_upper
+    )
+    
+    # Store the results in the list for the current dataset
+    dataset_results[[var]] <- list(predictions = results, difference = GLM_CIs)
+  }
+  
+  # Store the results for the current dataset in the overall results list
+  all_results[[dataset_name]] <- dataset_results
+}
+
+# Combine all results into a single data frame for predictions and differences
+GLM_predictions <- do.call(rbind, lapply(all_results, function(ds) do.call(rbind, lapply(ds, function(x) x$predictions))))
+GLM_CIs <- do.call(rbind, lapply(all_results, function(ds) do.call(rbind, lapply(ds, function(x) x$difference))))
+
+# Display the results
+print(GLM_predictions)
+print(GLM_CIs)
+```
+
+## -
+
+## Appendix
+
+#### Separate Analysis for Corner Kicks
+
+```{r}
+#| label: Separate Analysis for Corner Kicks
+
+#2 year comparison dataset (FBref didn't supply number of corners until 17/18 season)
+EPL_2 <- EPL_Totals %>%
+  filter(Season %in% c("17/18", "18/19", "19/20", "20/21"))
+
+#T-Test analysis
+t.test(totalcorners ~ PostVAR, eq.var = FALSE, data = EPL_2)
+
+#Mann-Whitney U-Test analysis
+wmwTest(totalcorners ~ PostVAR, data = EPL_2)
+
+#Generalized Linear Model analysis
+summary(glm.nb(totalcorners ~ PostVAR, link = "log", data = EPL_2))$coefficients[8]
+AIC(glm.nb(totalcorners ~ PostVAR, link = "log", data = EPL_2))
+```
+
+#### Z-Tests (not used in paper)
+
+```{r}
+#| label: Z-Test analysis, using SD values from EPL_Totals (EPL_5) dataset
+
+z_test <- function(sample_data, post_var, population_sd) {
+  # Split data into two groups based on PostVAR
+  group1 <- sample_data[post_var == 0]
+  group2 <- sample_data[post_var == 1]
+  
+  # Calculate means and sample sizes
+  mean1 <- mean(group1, na.rm = TRUE)
+  mean2 <- mean(group2, na.rm = TRUE)
+  n1 <- length(group1)
+  n2 <- length(group2)
+  
+  # Calculate z-statistic
+  z_statistic <- (mean2 - mean1) / sqrt((population_sd^2 / n1) + (population_sd^2 / n2))
+  
+  # Calculate p-value
+  p_value <- 2 * (1 - pnorm(abs(z_statistic)))
+  
+  # Confidence interval (assuming a normal distribution)
+  conf_int <- (mean2 - mean1) + c(-1, 1) * qnorm(0.975) * sqrt((population_sd^2 / n1) + (population_sd^2 / n2))
+  
+  list(estimate = mean2 - mean1, conf.int = conf_int, p.value = p_value)
+}
+
+# List of variables of interest
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", "totalshots", "totaloff", "totalred", "totalyellow", "totaltackleswon", "totalint")
+
+
+# Assume a population standard deviation for each variable
+sd_pop <- c(
+  totalgoals = 1.6434029, totalfoulscom = 5.1740743, totalpksatt = 0.5122013, totalpksmade = 0.4553075, 
+  totalshots = 5.7816171, totaloff = 2.2169412, totalred = 0.3562214, totalyellow = 2.0222872, totaltackleswon = 7.9990457, totalint = 8.3870906)
+
+# Create an empty list to store z-test results
+z_tests <- list()
+
+# Loop over each variable
+for (var in variables) {
+  # 1 year
+  z_test_1 <- z_test(EPL_1[[var]], EPL_1$PostVAR, sd_pop[[var]])
+  # 3 years
+  z_test_3 <- z_test(EPL_3[[var]], EPL_3$PostVAR, sd_pop[[var]])
+  # 5 years
+  z_test_5 <- z_test(EPL_5[[var]], EPL_5$PostVAR, sd_pop[[var]])
+  
+  # Extract z-test estimate, 95% CI, and p-value, and store in data frame
+  result_df <- data.frame(
+    Variable = var,
+    Statistic = c("Estimate", "Lower CI limit", "Upper CI limit", "P-value"),
+    `1 year` = format(c(z_test_1$estimate, z_test_1$conf.int[1], z_test_1$conf.int[2], z_test_1$p.value), scientific = FALSE, digits = 5),
+    `3 years` = format(c(z_test_3$estimate, z_test_3$conf.int[1], z_test_3$conf.int[2], z_test_3$p.value), scientific = FALSE, digits = 5),
+    `5 years` = format(c(z_test_5$estimate, z_test_5$conf.int[1], z_test_5$conf.int[2], z_test_5$p.value), scientific = FALSE, digits = 5)
+  )
+  
+  # Append the result dataframe to the list
+  z_tests[[var]] <- result_df
+}
+
+# Combine all result data frames into one
+z_test_results <- do.call(rbind, z_tests)
+```
+
+```{r}
+#| label: Z-Test analysis, using SD values from respective datasets
+
+z_test <- function(sample_data, post_var, population_sd) {
+  # Split data into two groups based on PostVAR
+  group1 <- sample_data[post_var == 0]
+  group2 <- sample_data[post_var == 1]
+  
+  # Calculate means and sample sizes
+  mean1 <- mean(group1, na.rm = TRUE)
+  mean2 <- mean(group2, na.rm = TRUE)
+  n1 <- length(group1)
+  n2 <- length(group2)
+  
+  # Calculate z-statistic
+  z_statistic <- (mean2 - mean1) / sqrt((population_sd^2 / n1) + (population_sd^2 / n2))
+  
+  # Calculate p-value
+  p_value <- 2 * (1 - pnorm(abs(z_statistic)))
+  
+  # Confidence interval (assuming a normal distribution)
+  conf_int <- (mean2 - mean1) + c(-1, 1) * qnorm(0.975) * sqrt((population_sd^2 / n1) + (population_sd^2 / n2))
+  
+  list(estimate = mean2 - mean1, conf.int = conf_int, p.value = p_value)
+}
+
+# List of variables of interest
+variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", "totalshots", "totaloff", "totalred", "totalyellow", "totaltackleswon", "totalint")
+
+# Assume a population standard deviation for each variable for EPL_1
+sd_1 <- c(
+  totalgoals = 1.5380413, totalfoulscom = 5.3360648, totalpksatt = 0.5016010, totalpksmade = 0.4562246, 
+  totalshots = 5.5532647, totaloff = 2.2630061, totalred = 0.3459976, totalyellow = 1.9380103, totaltackleswon = 7.7276553, totalint = 5.4362745)
+
+# Assume a population standard deviation for each variable for EPL_33
+sd_3 <- c(
+  totalgoals = 1.6219835, totalfoulscom = 5.2691893, totalpksatt = 0.5138992, totalpksmade = 0.4578733, 
+  totalshots = 5.5799063, totaloff = 2.2483760, totalred = 0.3407801, totalyellow = 1.9827667, totaltackleswon = 7.8532875, totalint = 6.6577616)
+
+# Assume a population standard deviation for each variable for EPL_5
+sd_5 <- c(
+  totalgoals = 1.6434029, totalfoulscom = 5.1740743, totalpksatt = 0.5122013, totalpksmade = 0.4553075,
+  totalshots = 5.7816171, totaloff = 2.2169412, totalred = 0.3562214, totalyellow = 2.0222872, totaltackleswon = 7.9990457, totalint = 8.3870906)
+
+# Create an empty list to store z-test results
+z_tests <- list()
+
+# Loop over each variable
+for (var in variables) {
+  # 1 year
+  z_test_1 <- z_test(EPL_1[[var]], EPL_1$PostVAR, sd_1[[var]])
+  # 3 years
+  z_test_3 <- z_test(EPL_3[[var]], EPL_3$PostVAR, sd_3[[var]])
+  # 5 years
+  z_test_5 <- z_test(EPL_5[[var]], EPL_5$PostVAR, sd_5[[var]])
+  
+  # Extract z-test estimate, 95% CI, and p-value, and store in data frame
+  result_df <- data.frame(
+    Variable = var,
+    Statistic = c("Estimate", "Lower CI limit", "Upper CI limit", "P-value"),
+    `1 year` = format(c(z_test_1$estimate, z_test_1$conf.int[1], z_test_1$conf.int[2], z_test_1$p.value), scientific = FALSE, digits = 5),
+    `3 years` = format(c(z_test_3$estimate, z_test_3$conf.int[1], z_test_3$conf.int[2], z_test_3$p.value), scientific = FALSE, digits = 5),
+    `5 years` = format(c(z_test_5$estimate, z_test_5$conf.int[1], z_test_5$conf.int[2], z_test_5$p.value), scientific = FALSE, digits = 5)
+  )
+  
+  # Append the result dataframe to the list
+  z_tests[[var]] <- result_df
+}
+
+# Combine all result data frames into one
+z_test_results <- do.call(rbind, z_tests)
+```
