@@ -9,10 +9,53 @@ editor: visual
 
 As a part of "The Impact of Video Assistant Referee (VAR) on the English Premier League" by Jack Kenyon Brown, et. al.
 
+```{r}
+#| label: Load Packages
+#| echo: false
+#| warning: false
+
+library(tidyverse)
+library(gt)
+library(cowplot)
+```
+
+## Data Prep
+
+```{r}
+#| label: Import, Format, and Filter Data
+#| output: false
+#| echo: true
+
+#This analysis requires the "EPL_Totals" dataset, the can be obtained using the web scraping tools found in the "FBref EPL Web Scraper.qmd" found in the GitHub repository
+
+
+#Import EPL_Totals dataset
+
+
+#Be sure to assign Season, Week, and PostVAR variables as factors
+EPL_Totals$Season <- factor(EPL_Totals$Season, levels = unique(EPL_Totals$Season))
+EPL_Totals$Wk <- factor(EPL_Totals$Wk, levels = unique(EPL_Totals$Wk))
+EPL_Totals$PostVAR <- factor(EPL_Totals$PostVAR, levels = unique(EPL_Totals$PostVAR))
+
+
+#1 year comparison data
+EPL_1 <- EPL_Totals %>%
+  filter(Season %in% c("18/19", "19/20"))
+
+#3 year comparison data
+EPL_3 <- EPL_Totals %>%
+  filter(Season %in% c("16/17", "17/18", "18/19", "19/20", "20/21", "21/22"))
+
+#5 year comparison data
+EPL_5 <- EPL_Totals
+```
+
+## 
+
 ## Tables by Season
 
 ```{r}
-#| lable: Table of Average Total Match Statistics, by Season
+#| label: Table of Average Total Match Statistics, by Season
 
 # Average Match Statistics table with values rounded to three decimal points
 mean_table <- EPL_Totals %>%
@@ -237,7 +280,7 @@ plot_5_year <- EPL_5 %>%
 combined_plot <- plot_grid(plot_1_year, plot_3_year, plot_5_year, ncol = 1)
 
 # Add common legend
-combined_plot_with_legend <- cowplot::get_legend(plot_1_year) +
+combined_plot_with_legend <- get_legend(plot_1_year) +
   theme(legend.position = "bottom")
 
 # Display combined plot with legend

@@ -16,21 +16,18 @@ As a part of "The Impact of Video Assistant Referee (VAR) on the English Premier
 #| warning: false
 
 library(tidyverse)
-library(lme4)
-library(MASS)
-library(stats)
-library(car)
-library(coin)
 library(readxl)
 library(writexl)
-library(gt)
-library(lmtest)
-library(dplyr)
-library(multcompView)
-library(asht)
-library(usethis)
+library(stats)
 library(nortest)
 library(gridExtra)
+library(car)
+library(lmtest)
+library(broom)
+library(dplyr)
+library(asht)
+library(MASS)
+library(usethis)
 ```
 
 ## Data Prep
@@ -50,7 +47,8 @@ library(gridExtra)
 EPL_Totals$Season <- factor(EPL_Totals$Season, levels = unique(EPL_Totals$Season))
 EPL_Totals$Wk <- factor(EPL_Totals$Wk, levels = unique(EPL_Totals$Wk))
 EPL_Totals$PostVAR <- factor(EPL_Totals$PostVAR, levels = unique(EPL_Totals$PostVAR))
-
+#Setting totalcorners as numeric
+EPL_Totals$totalcorners <- as.numeric(EPL_Totals$totalcorners)
 
 #1 year comparison data
 EPL_1 <- EPL_Totals %>%
@@ -266,17 +264,20 @@ print(eqvar_results)
 
 ## -
 
-## T-Tests
+## Welch's T-Tests
 
 ```{r}
 #| label: T-Test Analysis
 #| warning: false
 
+# Prevent scientific notation for p-values
+options(scipen = 999)
+
 # List of variables of interest
 variables <- c("totalgoals", "totalfoulscom", "totalpksatt", "totalpksmade", "totalshots", "totaloff", "totalred", "totalyellow", "totaltackleswon", "totalint")
 
 # Create an empty list to store t-test results
-t_test_results_no_ev <- list()
+t_test_results <- list()
 
 # Loop over each variable
 for (var in variables) {
@@ -287,17 +288,32 @@ for (var in variables) {
   # 5 years
   t_test_5 <- t.test(get(var) ~ PostVAR, var.equal = FALSE, data = EPL_5)
   
-  # Extract t-test estimate, 95% CI, and p-value, and store in data frame
-  result_df <- data.frame(
-    Variable = var,
-    `1 year` = c(t_test_1$estimate, t_test_1$conf.int, t_test_1$p.value),
-    `3 years` = c(t_test_3$estimate, t_test_3$conf.int, t_test_3$p.value),
-    `5 years` = c(t_test_5$estimate, t_test_5$conf.int, t_test_5$p.value)
-  )
+  # Extract and tidy t-test results using broom
+  tidy_1 <- tidy(t_test_1)
+  tidy_1$Years <- "1 year"
+  tidy_3 <- tidy(t_test_3)
+  tidy_3$Years <- "3 years"
+  tidy_5 <- tidy(t_test_5)
+  tidy_5$Years <- "5 years"
   
-  #Store results in a list
-  t_test_results_no_ev[[var]] <- result_df
+  # Combine results into one dataframe
+  result_df <- bind_rows(tidy_1, tidy_3, tidy_5) %>%
+    mutate(Variable = var) %>%
+    relocate(Variable, Years)
+  
+  # Store results in a list
+  t_test_results[[var]] <- result_df
 }
+
+# Combine all results into one dataframe
+t_test_result <- bind_rows(t_test_results)
+
+# Round all numeric columns to 8 decimal places
+t_test_result <- t_test_result %>%
+  mutate(across(where(is.numeric), round, 8))
+
+# View the final results
+print(t_test_result)
 ```
 
 ## Mann-Whitney U-Tests
