@@ -31,7 +31,7 @@ Documentation with instructions regarding how these template datasets were manua
 
 ```{r}
 #Load in template dataset from GitHub repository
-Template_14_15 <- read_excel(here("Template Datasets", "Template_14_15.xlsx"))
+Template_14_15 <- read_excel(here("Template Datafiles", "Template_14_15.xlsx"))
 
 
 x <- 1
@@ -78,7 +78,7 @@ while (y < 380){
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.5.2))
     #Column summing the individual home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "Home GK"
-    HomeGK <- colSums(as.data.frame(sapply(data.5.2, as.numeric)))
+    HomeGK <- colSums(as.data.frame(lapply(data.5.2, as.numeric)))
     
     Template_14_15[i,32] <- HomeGK[1] #Saves
     Template_14_15[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
@@ -115,7 +115,7 @@ while (y < 380){
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.7.2))
     #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
-    AwayGK <- colSums(as.data.frame(sapply(data.7.2, as.numeric)))
+    AwayGK <- colSums(as.data.frame(lapply(data.7.2, as.numeric)))
     
     Template_14_15[i,49] <- AwayGK[1] #Saves
     Template_14_15[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
@@ -134,7 +134,7 @@ while (y < 380){
 
 ```{r}
 #Load in template dataset from GitHub repository
-Template_15_16 <- read_excel(here("Template Datasets", "Template_15_16.xlsx"))
+Template_15_16 <- read_excel(here("Template Datafiles", "Template_15_16.xlsx"))
 
 x <- 1
 y <- 20
@@ -180,7 +180,7 @@ while (y < 380){
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.5.2))
     #Column summing the individual home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "Home GK"
-    HomeGK <- colSums(as.data.frame(sapply(data.5.2, as.numeric)))
+    HomeGK <- colSums(as.data.frame(lapply(data.5.2, as.numeric)))
     
     Template_15_16[i,32] <- HomeGK[1] #Saves
     Template_15_16[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
@@ -217,7 +217,7 @@ while (y < 380){
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.7.2))
     #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
-    AwayGK <- colSums(as.data.frame(sapply(data.7.2, as.numeric)))
+    AwayGK <- colSums(as.data.frame(lapply(data.7.2, as.numeric)))
     
     Template_15_16[i,49] <- AwayGK[1] #Saves
     Template_15_16[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
@@ -236,7 +236,7 @@ while (y < 380){
 
 ```{r}
 #Load in template dataset from GitHub repository
-Template_16_17 <- read_excel(here("Template Datasets", "Template_16_17.xlsx"))
+Template_16_17 <- read_excel(here("Template Datafiles", "Template_16_17.xlsx"))
 
 x <- 1
 y <- 20
@@ -282,7 +282,7 @@ while (y < 380){
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.5.2))
     #Column summing the individual home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "Home GK"
-    HomeGK <- colSums(as.data.frame(sapply(data.5.2, as.numeric)))
+    HomeGK <- colSums(as.data.frame(lapply(data.5.2, as.numeric)))
     
     Template_16_17[i,32] <- HomeGK[1] #Saves
     Template_16_17[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
@@ -319,7 +319,7 @@ while (y < 380){
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.7.2))
     #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
-    AwayGK <- colSums(as.data.frame(sapply(data.7.2, as.numeric)))
+    AwayGK <- colSums(as.data.frame(lapply(data.7.2, as.numeric)))
     
     Template_16_17[i,49] <- AwayGK[1] #Saves
     Template_16_17[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
@@ -337,7 +337,7 @@ while (y < 380){
 
 ```{r}
 #Load in template dataset from GitHub repository
-Template_17_18 <- read_excel(here("Template Datasets", "Template_17_18.xlsx"))
+Template_17_18 <- read_excel(here("Template Datafiles", "Template_17_18.xlsx"))
 
 x <- 1
 y <- 20
@@ -399,7 +399,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.10.2))
     #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
-    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    HomeGK <- colSums(as.data.frame(lapply(data.10.2, as.numeric)))
     
     Template_17_18[i,32] <- HomeGK[1] #Saves
     Template_17_18[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
@@ -454,7 +454,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.17.2))
     #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
-    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    AwayGK <- colSums(as.data.frame(lapply(data.17.2, as.numeric)))
     
     Template_17_18[i,49] <- AwayGK[1] #Saves
     Template_17_18[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
@@ -470,7 +470,7 @@ while (y < 380) {
 
 ```{r}
 #Load in template dataset from GitHub repository
-Template_18_19 <- read_excel(here("Template Datasets", "Template_18_19.xlsx"))
+Template_18_19 <- read_excel(here("Template Datafiles", "Template_18_19.xlsx"))
 
 x <- 1
 y <- 20
@@ -532,7 +532,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.10.2))
     #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
-    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    HomeGK <- colSums(as.data.frame(lapply(data.10.2, as.numeric)))
     
     Template_18_19[i,32] <- HomeGK[1] #Saves
     Template_18_19[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
@@ -588,7 +588,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.17.2))
     #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
-    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    AwayGK <- colSums(as.data.frame(lapply(data.17.2, as.numeric)))
     
     Template_18_19[i,49] <- AwayGK[1] #Saves
     Template_18_19[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
@@ -604,7 +604,7 @@ while (y < 380) {
 
 ```{r}
 #Load in template dataset from GitHub repository
-Template_19_20 <- read_excel(here("Template Datasets", "Template_19_20.xlsx"))
+Template_19_20 <- read_excel(here("Template Datafiles", "Template_19_20.xlsx"))
 
 x <- 1
 y <- 20
@@ -666,7 +666,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.10.2))
     #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
-    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    HomeGK <- colSums(as.data.frame(lapply(data.10.2, as.numeric)))
     
     Template_19_20[i,32] <- HomeGK[1] #Saves
     Template_19_20[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
@@ -722,7 +722,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.17.2))
     #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
-    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    AwayGK <- colSums(as.data.frame(lapply(data.17.2, as.numeric)))
     
     Template_19_20[i,49] <- AwayGK[1] #Saves
     Template_19_20[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
@@ -738,7 +738,7 @@ while (y < 380) {
 
 ```{r}
 #Load in template dataset from GitHub repository
-Template_20_21 <- read_excel(here("Template Datasets", "Template_20_21.xlsx"))
+Template_20_21 <- read_excel(here("Template Datafiles", "Template_20_21.xlsx"))
 
 x <- 1
 y <- 20
@@ -800,7 +800,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.10.2))
     #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
-    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    HomeGK <- colSums(as.data.frame(lapply(data.10.2, as.numeric)))
     
     Template_20_21[i,32] <- HomeGK[1] #Saves
     Template_20_21[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
@@ -856,7 +856,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.17.2))
     #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
-    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    AwayGK <- colSums(as.data.frame(lapply(data.17.2, as.numeric)))
     
     Template_20_21[i,49] <- AwayGK[1] #Saves
     Template_20_21[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
@@ -872,7 +872,7 @@ while (y < 380) {
 
 ```{r}
 #Load in template dataset from GitHub repository
-Template_21_22 <- read_excel(here("Template Datasets", "Template_21_22.xlsx"))
+Template_21_22 <- read_excel(here("Template Datafiles", "Template_21_22.xlsx"))
 
 x <- 1
 y <- 20
@@ -934,7 +934,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.10.2))
     #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
-    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    HomeGK <- colSums(as.data.frame(lapply(data.10.2, as.numeric)))
     
     Template_21_22[i,32] <- HomeGK[1] #Saves
     Template_21_22[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
@@ -990,7 +990,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.17.2))
     #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
-    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    AwayGK <- colSums(as.data.frame(lapply(data.17.2, as.numeric)))
     
     Template_21_22[i,49] <- AwayGK[1] #Saves
     Template_21_22[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
@@ -1006,7 +1006,7 @@ while (y < 380) {
 
 ```{r}
 #Load in template dataset from GitHub repository
-Template_22_23 <- read_excel(here("Template Datasets", "Template_22_23.xlsx"))
+Template_22_23 <- read_excel(here("Template Datafiles", "Template_22_23.xlsx"))
 
 x <- 1
 y <- 20
@@ -1068,7 +1068,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.10.2))
     #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
-    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    HomeGK <- colSums(as.data.frame(lapply(data.10.2, as.numeric)))
     
     Template_22_23[i,32] <- HomeGK[1] #Saves
     Template_22_23[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
@@ -1124,7 +1124,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.17.2))
     #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
-    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    AwayGK <- colSums(as.data.frame(lapply(data.17.2, as.numeric)))
     
     Template_22_23[i,49] <- AwayGK[1] #Saves
     Template_22_23[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
@@ -1140,7 +1140,7 @@ while (y < 380) {
 
 ```{r}
 #Load in template dataset from GitHub repository
-Template_23_24 <- read_excel(here("Template Datasets", "Template_23_24.xlsx"))
+Template_23_24 <- read_excel(here("Template Datafiles", "Template_23_24.xlsx"))
 
 x <- 1
 y <- 20
@@ -1202,7 +1202,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.10.2))
     #Column summing the home team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "HomeGK"
-    HomeGK <- colSums(as.data.frame(sapply(data.10.2, as.numeric)))
+    HomeGK <- colSums(as.data.frame(lapply(data.10.2, as.numeric)))
     
     Template_23_24[i,32] <- HomeGK[1] #Saves
     Template_23_24[i,33] <- (HomeGK[2])/(NumOfGKs) #Save Percentage
@@ -1258,7 +1258,7 @@ while (y < 380) {
     #Saves the number of goalkeepers who played so we can get the average save percentage if there's more than one
     NumOfGKs <- as.numeric(length(data.17.2))
     #Column summing the individual away team goalkeeper stats to get total goalkeeper stats, and saving them as a numeric data frame called "AwayGK"
-    AwayGK <- colSums(as.data.frame(sapply(data.17.2, as.numeric)))
+    AwayGK <- colSums(as.data.frame(lapply(data.17.2, as.numeric)))
     
     Template_23_24[i,49] <- AwayGK[1] #Saves
     Template_23_24[i,50] <- (AwayGK[2])/(NumOfGKs) #Save Percentage
