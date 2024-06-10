@@ -47,7 +47,8 @@ library(usethis)
 EPL_Totals$Season <- factor(EPL_Totals$Season, levels = unique(EPL_Totals$Season))
 EPL_Totals$Wk <- factor(EPL_Totals$Wk, levels = unique(EPL_Totals$Wk))
 EPL_Totals$PostVAR <- factor(EPL_Totals$PostVAR, levels = unique(EPL_Totals$PostVAR))
-
+#Setting totalcorners as numeric
+EPL_Totals$totalcorners <- as.numeric(EPL_Totals$totalcorners)
 
 #1 year comparison data
 EPL_1 <- EPL_Totals %>%
