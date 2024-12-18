@@ -227,6 +227,7 @@ EPL_5 %>%
 #| error: false
 #| out-width: 100%
 
+#You must manually change 'totaloff' to a variable of your choice, and make sure to adjust the labels too!
 
 plot_1_year <- EPL_1 %>%
   group_by(PostVAR, Wk) %>%
